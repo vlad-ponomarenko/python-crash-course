@@ -2125,3 +2125,719 @@ You’ll learn to string together relatively complex sets of conditional tests t
 You’ll also learn to use if statements while looping through a list to take specific actions with selected elements from a list.
 
 # CHAPTER 5 - if Statements
+
+```python
+cars = ['audi', 'bmw', 'subaru', 'toyota']
+
+for car in cars:
+❶     if car == 'bmw':
+        print(car.upper())
+    else:
+        print(car.title())
+
+
+car = 'bmw'
+car == 'bmw'
+
+cars = ["audi", "bmw", "subaru", "toyota"]
+
+for car in cars:
+    if car == "bmw":
+        print(car.upper())
+    else:
+        print(car.title())
+
+
+# true
+car = "bmw"
+print(car == "bmw")
+
+# true
+car2 = "bmw"
+print(car == car2)
+
+# true
+car = "Audi"
+print(car.lower() == "audi")
+
+requested_topping = "mushrooms"
+
+if requested_topping != "anchovies":
+    print("Hold the anchovies!")
+
+# numerical comparisons
+age = 18
+print(age == 18)
+
+answer = 17
+if answer != 42:
+    print("That is not the correct answer. Please try again!")
+
+print(age < 17)
+print(age <= 21)
+print(age > 21)
+print(age >= 21)
+
+age_0 = 22
+age_1 = 18
+multiple_condition = age_0 >= 21 and age_1 >= 21
+
+# for better readability
+another_condition = (age_0 >= 21) and (age_1 >= 21)
+
+or_condition = age_0 >= 21 or age_1 <= 21
+
+# checking whether a value is in a list
+
+requested_toppings = ["mushrooms", "onions", "pineapple"]
+list_condition_1 = "mushrooms" in requested_toppings
+list_condition_2 = "pepperoni" in requested_toppings
+
+banned_users = ["andrew", "carolina", "david"]
+user = "marie"
+
+if user not in banned_users:
+    print(f"{user.title()}, you can post a response if you wish.")
+
+# Boolean Expression
+game_active = True
+can_edit = False
+
+```
+
+## Exercise
+
+```
+Try It Yourself
+5-1. Conditional Tests: Write a series of conditional tests. Print a statement describing each test and your prediction for the results of each test. Your code should look something like this:
+
+car = 'subaru'
+print("Is car == 'subaru'? I predict True.")
+print(car == 'subaru')
+
+print("\nIs car == 'audi'? I predict False.")
+print(car == 'audi')
+Look closely at your results, and make sure you understand why each line evaluates to True or False.
+Create at least 10 tests. Have at least 5 tests evaluate to True and another 5 tests evaluate to False.
+5-2. More Conditional Tests: You don’t have to limit the number of tests you create to 10. If you want to try more comparisons, write more tests and add them to conditional_tests.py. Have at least one True and one False result for each of the following:
+
+Tests for equality and inequality with strings
+Tests using the lower() method
+Numerical tests involving equality and inequality, greater than and less than, greater than or equal to, and less than or equal to
+Tests using the and keyword and the or keyword
+Test whether an item is in a list
+Test whether an item is not in a list
+
+```
+
+## If Statements
+
+```python
+age = 12
+❶ if age < 4:
+    print("Your admission cost is $0.")
+❷ elif age < 18:
+    print("Your admission cost is $25.")
+❸ else:
+    print("Your admission cost is $40.")
+
+
+age = 12
+
+if age < 4:
+    price = 0
+elif age < 18:
+    price = 25
+elif age < 65:
+    price = 40
+else:
+    price = 20
+
+print(f"Your admission cost is ${price}.")
+```
+
+## Exercise
+
+```
+Try It Yourself
+5-3. Alien Colors #1: Imagine an alien was just shot down in a game. Create a variable called alien_color and assign it a value of 'green', 'yellow', or 'red'.
+
+Write an if statement to test whether the alien’s color is green. If it is, print a message that the player just earned 5 points.
+Write one version of this program that passes the if test and another that fails. (The version that fails will have no output.)
+5-4. Alien Colors #2: Choose a color for an alien as you did in Exercise 5-3, and write an if-else chain.
+
+If the alien’s color is green, print a statement that the player just earned 5 points for shooting the alien.
+If the alien’s color isn’t green, print a statement that the player just earned 10 points.
+Write one version of this program that runs the if block and another that runs the else block.
+5-5. Alien Colors #3: Turn your if-else chain from Exercise 5-4 into an if-elif-else chain.
+
+If the alien is green, print a message that the player earned 5 points.
+If the alien is yellow, print a message that the player earned 10 points.
+If the alien is red, print a message that the player earned 15 points.
+Write three versions of this program, making sure each message is printed for the appropriate color alien.
+5-6. Stages of Life: Write an if-elif-else chain that determines a person’s stage of life. Set a value for the variable age, and then:
+
+If the person is less than 2 years old, print a message that the person is a baby.
+If the person is at least 2 years old but less than 4, print a message that the person is a toddler.
+If the person is at least 4 years old but less than 13, print a message that the person is a kid.
+If the person is at least 13 years old but less than 20, print a message that the person is a teenager.
+If the person is at least 20 years old but less than 65, print a message that the person is an adult.
+If the person is age 65 or older, print a message that the person is an elder.
+5-7. Favorite Fruit: Make a list of your favorite fruits, and then write a series of independent if statements that check for certain fruits in your list.
+
+Make a list of your three favorite fruits and call it favorite_fruits.
+Write five if statements. Each should check whether a certain kind of fruit is in your list. If the fruit is in your list, the if block should print a statement, such as You really like bananas!
+```
+
+## Using Statements with lists
+
+```python
+for requested_topping in requested_toppings:
+    if requested_topping == 'green peppers':
+        print("Sorry, we are out of green peppers right now.")
+    else:
+        print(f"Adding {requested_topping}.")
+
+print("\nFinished making your pizza!")
+
+
+requested_toppings = []
+
+# check for emptiness
+if requested_toppings:
+    for requested_topping in requested_toppings:
+        print(f"Adding {requested_topping}.")
+    print("\nFinished making your pizza!")
+else:
+    print("Are you sure you want a plain pizza?")
+
+
+
+
+# check against the other list
+available_toppings = ['mushrooms', 'olives', 'green peppers',
+                      'pepperoni', 'pineapple', 'extra cheese']
+
+❶ requested_toppings = ['mushrooms', 'french fries', 'extra cheese']
+
+for requested_topping in requested_toppings:
+❷     if requested_topping in available_toppings:
+        print(f"Adding {requested_topping}.")
+❸     else:
+        print(f"Sorry, we don't have {requested_topping}.")
+
+print("\nFinished making your pizza!")
+
+```
+
+## Exercise
+
+```
+Try It Yourself
+5-8. Hello Admin: Make a list of five or more usernames, including the name 'admin'. Imagine you are writing code that will print a greeting to each user after they log in to a website. Loop through the list, and print a greeting to each user.
+
+If the username is 'admin', print a special greeting, such as Hello admin, would you like to see a status report?
+Otherwise, print a generic greeting, such as Hello Jaden, thank you for logging in again.
+5-9. No Users: Add an if test to hello_admin.py to make sure the list of users is not empty.
+
+If the list is empty, print the message We need to find some users!
+Remove all of the usernames from your list, and make sure the correct message is printed.
+5-10. Checking Usernames: Do the following to create a program that simulates how websites ensure that everyone has a unique username.
+
+Make a list of five or more usernames called current_users.
+Make another list of five usernames called new_users. Make sure one or two of the new usernames are also in the current_users list.
+Loop through the new_users list to see if each new username has already been used. If it has, print a message that the person will need to enter a new username. If a username has not been used, print a message saying that the username is available.
+Make sure your comparison is case insensitive. If 'John' has been used, 'JOHN' should not be accepted. (To do this, you’ll need to make a copy of current_users containing the lowercase versions of all existing users.)
+5-11. Ordinal Numbers: Ordinal numbers indicate their position in a list, such as 1st or 2nd. Most ordinal numbers end in th, except 1, 2, and 3.
+
+Store the numbers 1 through 9 in a list.
+Loop through the list.
+Use an if-elif-else chain inside the loop to print the proper ordinal ending for each number. Your output should read "1st 2nd 3rd 4th 5th 6th 7th 8th 9th", and each result should be on a separate line.
+```
+
+## Styling your statements
+
+- use a single space around comparison operators, such as ==, >=, and <=. For example
+
+```python
+if age < 4:
+
+```
+
+## Exercise
+
+```
+Try It Yourself
+5-12. Styling if Statements: Review the programs you wrote in this chapter, and make sure you styled your conditional tests appropriately.
+
+5-13. Your Ideas: At this point, you’re a more capable programmer than you were when you started this book. Now that you have a better sense of how real-world situations are modeled in programs, you might be thinking of some problems you could solve with your own programs. Record any new ideas you have about problems you might want to solve as your programming skills continue to improve. Consider games you might want to write, datasets you might want to explore, and web applications you’d like to create.
+```
+
+## Summary Chapter 5
+
+In this chapter you learned how to
+write conditional tests, which always evaluate to True or False.
+
+You learned to write simple if statements, if-else chains, and if-elif-else chains.
+
+You began using these structures to identify particular conditions you need to test and to know when those conditions have been met in your programs.
+
+You learned to handle certain items in a list differently than all other items while continuing to utilize the efficiency of a for loop.
+
+You also revisited Python’s style recommendations to ensure that your increasingly complex programs are still relatively easy to read and understand.
+
+In Chapter 6 you’ll learn about Python’s dictionaries.
+
+A dictionary is similar to a list, but it allows you to connect pieces of information.
+
+You’ll learn how to build dictionaries, loop through them, and use them in combination with lists and if statements.
+
+Learning about dictionaries will enable you to model an even wider variety of real-world situations.
+
+# CHAPTER 6 - DICTIONARIES
+
+- A dictionary in Python is a collection of key-value pairs. Each key is connected to a value, and you can use a key to access the value associated with that key.
+
+- A key’s value can be a number, a string, a list, or even another dictionary.
+
+* In fact, you can use any object that you can create in Python as a value in a dictionary.
+
+* In Python, a dictionary is wrapped in braces ({}) with a series of key-value pairs inside the braces
+
+* A key-value pair is a set of values associated with each other
+
+```python
+alien_0 = {'color': 'green'}
+alien_0 = {'color': 'green', 'points': 5}
+alien_0 = {'color': 'green'}
+print(alien_0['color'])
+
+alien_0 = {'color': 'green', 'points': 5}
+
+new_points = alien_0['points']
+print(f"You just earned {new_points} points!")
+
+
+alien_0 = {'color': 'green', 'points': 5}
+print(alien_0)
+
+alien_0['x_position'] = 0
+alien_0['y_position'] = 25
+print(alien_0)
+
+
+
+alien_0 = {}
+
+alien_0['color'] = 'green'
+alien_0['points'] = 5
+
+print(alien_0)
+
+# modify
+
+alien_0 = {'color': 'green'}
+print(f"The alien is {alien_0['color']}.")
+
+alien_0['color'] = 'yellow'
+print(f"The alien is now {alien_0['color']}.")
+```
+
+```python
+alien_0 = {'x_position': 0, 'y_position': 25, 'speed': 'medium'}
+print(f"Original position: {alien_0['x_position']}")
+
+# Move the alien to the right.
+# Determine how far to move the alien based on its current speed.
+❶ if alien_0['speed'] == 'slow':
+    x_increment = 1
+elif alien_0['speed'] == 'medium':
+    x_increment = 2
+else:
+    # This must be a fast alien.
+    x_increment = 3
+
+# The new position is the old position plus the increment.
+❷ alien_0['x_position'] = alien_0['x_position'] + x_increment
+
+print(f"New position: {alien_0['x_position']}")
+
+```
+
+## Removing key-value pairs
+
+```python
+alien_0 = {'color': 'green', 'points': 5}
+print(alien_0)
+
+❶ del alien_0['points']
+print(alien_0)
+```
+
+## A Dictionary of similar objects
+
+```python
+favorite_languages = {
+    'jen': 'python',
+    'sarah': 'c',
+    'edward': 'rust',
+    'phil': 'python',
+    }
+
+language = favorite_languages["sarah"].title()
+print(f"Sarah's favorite language is {language}.")
+
+
+```
+
+## Using get() to access values
+
+- Using keys in square brackets to retrieve the value you’re interested in from a dictionary might cause one potential problem: if the key you ask for doesn’t exist, you’ll get an error.
+
+```python
+alien_0 = {'color': 'green', 'speed': 'slow'}
+
+point_value = alien_0.get('points', 'No point value assigned.')
+print(point_value)
+
+
+# None
+
+point_value = alien_0.get("points")
+print(point_value)
+
+```
+
+- if you leave out the second argument in the call to get() and the key doesn’t exist, Python will return the value None. The special value None means “no value exists.” This is not an error: it’s a special value meant to indicate the absence of a value. You’ll see more uses for None in Chapter 8.
+
+## Exercise
+
+```
+6-1. Person: Use a dictionary to store information about a person you know. Store their first name, last name, age, and the city in which they live. You should have keys such as first_name, last_name, age, and city. Print each piece of information stored in your dictionary.
+
+6-2. Favorite Numbers: Use a dictionary to store people’s favorite numbers. Think of five names, and use them as keys in your dictionary. Think of a favorite number for each person, and store each as a value in your dictionary. Print each person’s name and their favorite number. For even more fun, poll a few friends and get some actual data for your program.
+
+6-3. Glossary: A Python dictionary can be used to model an actual dictionary. However, to avoid confusion, let’s call it a glossary.
+
+Think of five programming words you’ve learned about in the previous chapters. Use these words as the keys in your glossary, and store their meanings as values.
+Print each word and its meaning as neatly formatted output. You might print the word followed by a colon and then its meaning, or print the word on one line and then print its meaning indented on a second line. Use the newline character (\n) to insert a blank line between each word-meaning pair in your output.
+
+```
+
+## Looping throgh a dictionary: for k, v in user_0.items()
+
+```python
+user_0 = {
+    'username': 'efermi',
+    'first': 'enrico',
+    'last': 'fermi',
+    }
+
+for key, value in user_0.items():
+    print(f"\nKey: {key}")
+    print(f"Value: {value}")
+```
+
+```python
+favorite_languages = {
+    'jen': 'python',
+    'sarah': 'c',
+    'edward': 'rust',
+    'phil': 'python',
+    }
+# same as for name in favorite_languages
+for name in favorite_languages.keys():
+    print(name.title())
+```
+
+```python
+favorite_languages = {
+    --snip--
+    }
+
+friends = ['phil', 'sarah']
+for name in favorite_languages.keys():
+    print(f"Hi {name.title()}.")
+
+❶     if name in friends:
+❷         language = favorite_languages[name].title()
+        print(f"\t{name.title()}, I see you love {language}!")
+```
+
+```python
+if "erin" not in favorite_languages.keys():
+        print("Erin, please take our poll!")
+
+```
+
+```python
+favorite_languages = {
+    'jen': 'python',
+    'sarah': 'c',
+    'edward': 'rust',
+    'phil': 'python',
+    }
+
+for name in sorted(favorite_languages.keys()):
+    print(f"{name.title()}, thank you for taking the poll.")
+```
+
+- This approach pulls all the values from the dictionary without checking for repeats
+
+```python
+favorite_languages = {
+    'jen': 'python',
+    'sarah': 'c',
+    'edward': 'rust',
+    'phil': 'python',
+    }
+
+print("The following languages have been mentioned:")
+for language in favorite_languages.values():
+    print(language.title())
+
+```
+
+- but in a poll with a large number of respondents, it would result in a very repetitive list
+- To see each language chosen without repetition, we can use a set. A set is a collection in wh
+
+```python
+print("The following languages have been mentioned:")
+for language in set(favorite_languages.values()):
+    print(language.title())
+
+```
+
+- Set
+
+```python
+languages = {'python', 'rust', 'python', 'c'}
+# {'rust', 'python', 'c'}
+```
+
+## Exercise
+
+Try It Yourself
+6-4. Glossary 2: Now that you know how to loop through a dictionary, clean up the code from Exercise 6-3 (page 99) by replacing your series of print() calls with a loop that runs through the dictionary’s keys and values. When you’re sure that your loop works, add five more Python terms to your glossary. When you run your program again, these new words and meanings should automatically be included in the output.
+
+6-5. Rivers: Make a dictionary containing three major rivers and the country each river runs through. One key-value pair might be 'nile': 'egypt'.
+
+Use a loop to print a sentence about each river, such as The Nile runs through Egypt.
+Use a loop to print the name of each river included in the dictionary.
+Use a loop to print the name of each country included in the dictionary.
+6-6. Polling: Use the code in favorite_languages.py (page 96).
+
+Make a list of people who should take the favorite languages poll. Include some names that are already in the dictionary and some that are not.
+Loop through the list of people who should take the poll. If they have already taken the poll, print a message thanking them for responding. If they have not yet taken the poll, print a message inviting them to take the poll.
+
+## Nesting
+
+### A list of Dictionaries
+
+- store multiple dictionaries in a list,
+- or a list of items as a value in a dictionary.
+
+```python
+alien_0 = {'color': 'green', 'points': 5}
+alien_1 = {'color': 'yellow', 'points': 10}
+alien_2 = {'color': 'red', 'points': 15}
+
+❶ aliens = [alien_0, alien_1, alien_2]
+
+for alien in aliens:
+    print(alien)
+
+# {'color': 'green', 'points': 5}
+# {'color': 'yellow', 'points': 10}
+# {'color': 'red', 'points': 15}
+```
+
+```python
+# Make an empty list for storing aliens.
+aliens = []
+
+# Make 30 green aliens.
+for alien_number in range(30):
+    new_alien = {"color": "green", "points": 5, "speed": "slow"}
+    aliens.append(new_alien)
+
+for alien in aliens[:3]:
+    if alien["color"] == "green":
+        alien["color"] = "yellow"
+        alien["speed"] = "medium"
+        alien["points"] = 10
+    elif alien["color"] == "yellow":
+        alien["color"] = "red"
+        alien["speed"] = "fast"
+        alien["points"] = 15
+
+print("PRINT 5 ALIENS")
+
+# Show the first 5 aliens.
+for alien in aliens[:5]:
+    print(alien)
+print("...")
+
+# Show how many aliens have been created.
+print(f"Total number of aliens: {len(aliens)}")
+
+```
+
+### A list in a Dictionary
+
+```python
+# Store information about a pizza being ordered.
+pizza = {
+    'crust': 'thick',
+    'toppings': ['mushrooms', 'extra cheese'],
+    }
+
+# Summarize the order.
+❶ print(f"You ordered a {pizza['crust']}-crust pizza "
+    "with the following toppings:")
+
+❷ for topping in pizza['toppings']:
+    print(f"\t{topping}")
+
+
+# output
+You ordered a thick-crust pizza with the following toppings:
+        mushrooms
+        extra cheese
+```
+
+- We begin with a dictionary that holds information about a pizza that has been ordered.
+
+One key in the dictionary is 'crust', and the associated value is the string 'thick'. The next key, 'toppings', has a list as its value that stores all requested toppings.
+
+We summarize the order before building the pizza ❶. When you need to break up a long line in a print() call, choose an appropriate point at which to break the line being printed, and end the line with a quotation mark.
+
+Indent the next line, add an opening quotation mark, and continue the string.
+
+Python will automatically combine all of the strings it finds inside the parentheses. To print the toppings, we write a for loop ❷.
+
+To access the list of toppings, we use the key 'toppings', and Python grabs the list of toppings from the dictionary.
+
+- You can nest a list inside a dictionary anytime you want more than one value to be associated with a single key in a dictionary.
+
+```python
+favorite_languages = {
+    'jen': ['python', 'rust'],
+    'sarah': ['c'],
+    'edward': ['rust', 'go'],
+    'phil': ['python', 'haskell'],
+    }
+
+❶ for name, languages in favorite_languages.items():
+    print(f"\n{name.title()}'s favorite languages are:")
+❷     for language in languages:
+        print(f"\t{language.title()}")
+
+```
+
+- You should not nest lists and dictionaries too deeply. If you’re nesting items much deeper than what you see in the preceding examples, or if you’re working with someone else’s code with significant levels of nesting, there’s most likely a simpler way to solve the problem.
+
+### A Dictionary in a Dictionary
+
+- For example, if you have several users for a website, each with a unique username, you can use the usernames as the keys in a dictionary.
+
+- You can then store information about each user by using a dictionary as the value associated with their username
+
+```python
+users = {
+    'aeinstein': {
+        'first': 'albert',
+        'last': 'einstein',
+        'location': 'princeton',
+        },
+
+    'mcurie': {
+        'first': 'marie',
+        'last': 'curie',
+        'location': 'paris',
+        },
+
+    }
+
+❶ for username, user_info in users.items():
+❷     print(f"\nUsername: {username}")
+❸     full_name = f"{user_info['first']} {user_info['last']}"
+    location = user_info['location']
+
+❹     print(f"\tFull name: {full_name.title()}")
+    print(f"\tLocation: {location.title()}")
+```
+
+## Exercise
+
+```Try It Yourself
+6-7. People: Start with the program you wrote for Exercise 6-1 (page 98). Make two new dictionaries representing different people, and store all three dictionaries in a list called people. Loop through your list of people. As you loop through the list, print everything you know about each person.
+
+6-8. Pets: Make several dictionaries, where each dictionary represents a different pet. In each dictionary, include the kind of animal and the owner’s name. Store these dictionaries in a list called pets. Next, loop through your list and as you do, print everything you know about each pet.
+
+6-9. Favorite Places: Make a dictionary called favorite_places. Think of three names to use as keys in the dictionary, and store one to three favorite places for each person. To make this exercise a bit more interesting, ask some friends to name a few of their favorite places. Loop through the dictionary, and print each person’s name and their favorite places.
+
+6-10. Favorite Numbers: Modify your program from Exercise 6-2 (page 98) so each person can have more than one favorite number. Then print each person’s name along with their favorite numbers.
+
+6-11. Cities: Make a dictionary called cities. Use the names of three cities as keys in your dictionary. Create a dictionary of information about each city and include the country that the city is in, its approximate population, and one fact about that city. The keys for each city’s dictionary should be something like country, population, and fact. Print the name of each city and all of the information you have stored about it.
+
+6-12. Extensions: We’re now working with examples that are complex enough that they can be extended in any number of ways. Use one of the example programs from this chapter, and extend it by adding new keys and values, changing the context of the program, or improving the formatting of the output.
+
+```
+
+## Summary
+
+In this chapter, you learned how to
+
+define a dictionary and
+how to work with the information stored in a dictionary.
+
+You learned how to access and modify individual elements in a dictionary,
+
+and how to loop through all of the information in a dictionary.
+
+You learned to loop through a dictionary’s key-value pairs, its keys, and its values.
+
+You also learned how to
+nest multiple dictionaries in a list,
+nest lists in a dictionary, and
+nest a dictionary inside a dictionary.
+
+In the next chapter you’ll learn about
+while loops and how to accept input from people who are using your programs.
+
+This will be an exciting chapter, because you’ll learn to make all of your programs interactive: they’ll be able to respond to user input.
+
+```python
+# Display all of the information in the dictionary.
+for person in people:
+    name = f"{person['first_name'].title()} {person['last_name'].title()}"
+    age = person['age']
+    city = person['city'].title()
+
+    print(f"{name}, of {city}, is {age} years old.")
+
+
+favorite_places = {
+    'eric': ['bear mountain', 'death valley', 'tierra del fuego'],
+    'erin': ['hawaii', 'iceland'],
+    'willie': ['mt. verstovia', 'the playground', 'new hampshire']
+    }
+
+for name, places in favorite_places.items():
+    print(f"\n{name.title()} likes the following places:")
+    for place in places:
+        print(f"- {place.title()}")
+
+
+favorite_numbers = {
+    'mandy': [42, 17],
+    'micah': [42, 39, 56],
+    'gus': [7, 12],
+    }
+
+for name, numbers in favorite_numbers.items():
+    print(f"\n{name.title()} likes the following numbers:")
+    for number in numbers:
+        print(f"  {number}"
+```
