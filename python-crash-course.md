@@ -2841,3 +2841,516 @@ for name, numbers in favorite_numbers.items():
     for number in numbers:
         print(f"  {number}"
 ```
+
+# CHAPTER 7 - User Input and while Loops
+
+- With the ability to work with user input and the ability to control how long your programs run, you’ll be able to write fully interactive programs.
+
+```python
+message = input("Tell me something, and I will repeat it back to you: ")
+print(message)
+
+name = input("Please enter your name: ")
+print(f"\nHello, {name}!")
+
+# Prompt that's longer than one line
+prompt = "If you share your name, we can personalize the messages you see."
+prompt += "\nWhat is your first name? "
+
+name = input(prompt)
+print(f"\nHello, {name}!")
+
+
+height = input("How tall are you, in inches? ")
+height = int(height)
+
+if height >= 48:
+    print("\nYou're tall enough to ride!")
+else:
+    print("\nYou'll be able to ride when you're a little older.")
+```
+
+```python
+number = input("Enter a number, and I'll tell you if it's even or odd: ")
+number = int(number)
+
+if number % 2 == 0:
+    print(f"\nThe number {number} is even.")
+else:
+    print(f"\nThe number {number} is odd.")
+
+```
+
+## Exercise
+
+```
+Try It Yourself
+7-1. Rental Car: Write a program that asks the user what kind of rental car they would like. Print a message about that car, such as “Let me see if I can find you a Subaru.”
+
+7-2. Restaurant Seating: Write a program that asks the user how many people are in their dinner group. If the answer is more than eight, print a message saying they’ll have to wait for a table. Otherwise, report that their table is ready.
+
+7-3. Multiples of Ten: Ask the user for a number, and then report whether the number is a multiple of 10 or not.
+
+```
+
+## Introducing while Loops
+
+```python
+current_number = 1
+while current_number <= 5:
+    print(current_number)
+    current_number += 1
+
+prompt = "\nTell me something, and I will repeat it back to you:"
+prompt += "\nEnter 'quit' to end the program. "
+
+message = ""
+while message != 'quit':
+    message = input(prompt)
+    print(message)
+
+
+prompt += "\nEnter 'quit' to end the program. "
+
+message = ""
+while message != 'quit':
+    message = input(prompt)
+
+    if message != 'quit':
+        print(message)
+```
+
+- using a flag
+
+```python
+prompt = "\nTell me something, and I will repeat it back to you:"
+prompt += "\nEnter 'quit' to end the program. "
+
+active = True
+❶ while active:
+    message = input(prompt)
+
+    if message == 'quit':
+        active = False
+    else:
+        print(message)
+
+```
+
+- using break to exit loop
+
+```python
+prompt = "\nPlease enter the name of a city you have visited:"
+prompt += "\n(Enter 'quit' when you are finished.) "
+
+❶ while True:
+    city = input(prompt)
+
+    if city == 'quit':
+        break
+    else:
+        print(f"I'd love to go to {city.title()}!")
+```
+
+- using continue
+
+```python
+current_number = 0
+while current_number < 10:
+❶     current_number += 1
+    if current_number % 2 == 0:
+        continue
+
+    print(current_number)
+
+```
+
+## Exercise
+
+```
+Try It Yourself
+7-4. Pizza Toppings: Write a loop that prompts the user to enter a series of pizza toppings until they enter a 'quit' value. As they enter each topping, print a message saying you’ll add that topping to their pizza.
+
+7-5. Movie Tickets: A movie theater charges different ticket prices depending on a person’s age. If a person is under the age of 3, the ticket is free; if they are between 3 and 12, the ticket is $10; and if they are over age 12, the ticket is $15. Write a loop in which you ask users their age, and then tell them the cost of their movie ticket.
+
+7-6. Three Exits: Write different versions of either Exercise 7-4 or 7-5 that do each of the following at least once:
+
+Use a conditional test in the while statement to stop the loop.
+Use an active variable to control how long the loop runs.
+Use a break statement to exit the loop when the user enters a 'quit' value.
+7-7. Infinity: Write a loop that never ends, and run it. (To end the loop, press CTRL-C or close the window displaying the output.)
+```
+
+## Using a while Loop with Lists and Dictionaries
+
+- A for loop is effective for looping through a list,
+- but you shouldn’t modify a list inside a for loop because Python will have trouble keeping track of the items in the list.
+- To modify a list as you work through it, use a while loop.
+- Using while loops with lists and dictionaries allows you to collect, store, and organize lots of input to examine and report on later.
+
+```python
+# Start with users that need to be verified,
+#  and an empty list to hold confirmed users.
+❶ unconfirmed_users = ['alice', 'brian', 'candace']
+confirmed_users = []
+
+# Verify each user until there are no more unconfirmed users.
+#  Move each verified user into the list of confirmed users.
+❷ while unconfirmed_users:
+❸     current_user = unconfirmed_users.pop()
+
+    print(f"Verifying user: {current_user.title()}")
+❹     confirmed_users.append(current_user)
+
+# Display all confirmed users.
+print("\nThe following users have been confirmed:")
+for confirmed_user in confirmed_users:
+    print(confirmed_user.title())
+```
+
+- remove all instances of specific values from a list
+
+```python
+pets = ['dog', 'cat', 'dog', 'goldfish', 'cat', 'rabbit', 'cat']
+print(pets)
+
+while 'cat' in pets:
+    pets.remove('cat')
+
+print(pets)
+
+```
+
+- dictionaries
+
+```python
+responses = {}
+# Set a flag to indicate that polling is active.
+polling_active = True
+
+while polling_active:
+    # Prompt for the person's name and response.
+❶     name = input("\nWhat is your name? ")
+    response = input("Which mountain would you like to climb someday? ")
+
+    # Store the response in the dictionary.
+❷     responses[name] = response
+
+    # Find out if anyone else is going to take the poll.
+❸     repeat = input("Would you like to let another person respond? (yes/ no) ")
+    if repeat == 'no':
+        polling_active = False
+
+# Polling is complete. Show the results.
+print("\n--- Poll Results ---")
+❹ for name, response in responses.items():
+    print(f"{name} would like to climb {response}.")
+```
+
+## Exercise
+
+```
+Try It Yourself
+7-8. Deli: Make a list called sandwich_orders and fill it with the names of various sandwiches. Then make an empty list called finished_sandwiches. Loop through the list of sandwich orders and print a message for each order, such as I made your tuna sandwich. As each sandwich is made, move it to the list of finished sandwiches. After all the sandwiches have been made, print a message listing each sandwich that was made.
+
+7-9. No Pastrami: Using the list sandwich_orders from Exercise 7-8, make sure the sandwich 'pastrami' appears in the list at least three times. Add code near the beginning of your program to print a message saying the deli has run out of pastrami, and then use a while loop to remove all occurrences of 'pastrami' from sandwich_orders. Make sure no pastrami sandwiches end up in finished_sandwiches.
+
+7-10. Dream Vacation: Write a program that polls users about their dream vacation. Write a prompt similar to If you could visit one place in the world, where would you go? Include a block of code that prints the results of the poll.
+```
+
+# Summary CHAPTER 7
+
+In this chapter, you learned how to use input() to allow users to provide their own information in your programs.
+
+You learned to work with both text and numerical input and how to use while loops to make your programs run as long as your users want them to.
+
+You saw several ways to control the flow of a while loop by setting an active flag, using the break statement, and using the continue statement.
+
+You learned how to use a while loop to move items from one list to another and how to remove all instances of a value from a list.
+
+You also learned how while loops can be used with dictionaries.
+
+In Chapter 8 you’ll learn about functions.
+
+Functions allow you to break your programs into small parts, each of which does one specific job.
+
+You can call a function as many times as you want, and you can store your functions in separate files.
+
+By using functions, you’ll be able to write more efficient code that’s easier to troubleshoot and maintain and that can be reused in many different programs.
+
+```python
+sandwich_orders = ['veggie', 'grilled cheese', 'turkey', 'roast beef']
+finished_sandwiches = []
+
+while sandwich_orders:
+    current_sandwich = sandwich_orders.pop()
+    print(f"I'm working on your {current_sandwich} sandwich.")
+    finished_sandwiches.append(current_sandwich)
+
+print("\n")
+for sandwich in finished_sandwiches:
+    print(f"I made a {sandwich} sandwich.")
+```
+
+```python
+sandwich_orders = [
+    'pastrami', 'veggie', 'grilled cheese', 'pastrami',
+    'turkey', 'roast beef', 'pastrami']
+finished_sandwiches = []
+
+print("I'm sorry, we're all out of pastrami today.")
+while 'pastrami' in sandwich_orders:
+    sandwich_orders.remove('pastrami')
+
+print("\n")
+while sandwich_orders:
+    current_sandwich = sandwich_orders.pop()
+    print(f"I'm working on your {current_sandwich} sandwich.")
+    finished_sandwiches.append(current_sandwich)
+
+print("\n")
+for sandwich in finished_sandwiches:
+    print(f"I made a {sandwich} sandwich.")
+
+```
+
+```python
+name_prompt = "\nWhat's your name? "
+place_prompt = "If you could visit one place in the world, where would it be? "
+continue_prompt = "\nWould you like to let someone else respond? (yes/no) "
+
+# Responses will be stored in the form {name: place}.
+responses = {}
+
+while True:
+    # Ask the user where they'd like to go.
+    name = input(name_prompt)
+    place = input(place_prompt)
+
+    # Store the response.
+    responses[name] = place
+
+    # Ask if there's anyone else responding.
+    repeat = input(continue_prompt)
+    if repeat != 'yes':
+        break
+
+# Show results of the survey.
+print("\n--- Results ---")
+for name, place in responses.items():
+    print(f"{name.title()} would like to visit {place.title()}
+```
+
+# CHAPTER 8 - FUNCTIONS
+
+- functions, which are named blocks of code designed to do one specific job
+
+In this chapter you’ll also learn a variety of ways to pass information to functions.
+
+You’ll learn how to write certain functions whose primary job is to display information and other functions designed to process data and return a value or set of values.
+
+Finally, you’ll learn to store functions in separate files called modules to help organize your main program files.
+
+```python
+# function definition
+def greet_user():
+    # The text on the second line is a comment called a docstring, which describes what the function does.
+    """Display a simple greeting."""
+    print("Hello!")
+
+greet_user()
+
+
+def greet_user(username):
+    """Display a simple greeting."""
+    print(f"Hello, {username.title()}!")
+
+greet_user('jesse')
+```
+
+- parameter, a piece of information the function needs to do its job.
+- An argument is a piece of information that’s passed from a function call to a function
+
+## Exercise
+
+```
+Try It Yourself
+8-1. Message: Write a function called display_message() that prints one sentence telling everyone what you are learning about in this chapter. Call the function, and make sure the message displays correctly.
+
+8-2. Favorite Book: Write a function called favorite_book() that accepts one parameter, title. The function should print a message, such as One of my favorite books is Alice in Wonderland. Call the function, making sure to include a book title as an argument in the function call.
+
+
+```
+
+- You can use positional arguments, which need to be in the same order the parameters were written;
+
+- keyword arguments, where each argument consists of a variable name and a value; and lists and dictionaries of values
+
+```python
+# positional
+❶ def describe_pet(animal_type, pet_name):
+    """Display information about a pet."""
+    print(f"\nI have a {animal_type}.")
+    print(f"My {animal_type}'s name is {pet_name.title()}.")
+
+❷ describe_pet('hamster', 'harry')
+
+describe_pet('hamster', 'harry')
+describe_pet('dog', 'willie')
+
+# keyword arguemnts
+def describe_pet(animal_type, pet_name):
+    """Display information about a pet."""
+    print(f"\nI have a {animal_type}.")
+    print(f"My {animal_type}'s name is {pet_name.title()}.")
+
+describe_pet(animal_type='hamster', pet_name='harry')
+
+describe_pet(animal_type='hamster', pet_name='harry')
+describe_pet(pet_name='harry', animal_type='hamster')
+```
+
+- default values
+
+```python
+def describe_pet(pet_name, animal_type='dog'):
+    """Display information about a pet."""
+    print(f"\nI have a {animal_type}.")
+    print(f"My {animal_type}'s name is {pet_name.title()}.")
+
+# The only argument provided is 'willie', so it is matched up with the first parameter in the definition, pet_name
+describe_pet(pet_name='willie')
+describe_pet('willie')
+# Because an explicit argument for animal_type is provided, Python will ignore the parameter’s default value.
+describe_pet(pet_name='harry', animal_type='hamster')
+```
+
+- equivalent function calls
+
+```python
+def describe_pet(pet_name, animal_type='dog'):
+# A dog named Willie.
+describe_pet('willie')
+describe_pet(pet_name='willie')
+
+# A hamster named Harry.
+describe_pet('harry', 'hamster')
+describe_pet(pet_name='harry', animal_type='hamster')
+describe_pet(animal_type='hamster', pet_name='harry')
+
+
+```
+
+## Exercise
+
+```
+Try It Yourself
+8-3. T-Shirt: Write a function called make_shirt() that accepts a size and the text of a message that should be printed on the shirt. The function should print a sentence summarizing the size of the shirt and the message printed on it.
+
+Call the function once using positional arguments to make a shirt. Call the function a second time using keyword arguments.
+
+8-4. Large Shirts: Modify the make_shirt() function so that shirts are large by default with a message that reads I love Python. Make a large shirt and a medium shirt with the default message, and a shirt of any size with a different message.
+
+8-5. Cities: Write a function called describe_city() that accepts the name of a city and its country. The function should print a simple sentence, such as Reykjavik is in Iceland. Give the parameter for the country a default value. Call your function for three different cities, at least one of which is not in the default country.
+```
+
+## Return Values
+
+- The value the function returns is called a return value.
+
+```python
+def get_formatted_name(first_name, last_name):
+    """Return a full name, neatly formatted."""
+❶     full_name = f"{first_name} {last_name}"
+❷     return full_name.title()
+
+❸ musician = get_formatted_name('jimi', 'hendrix')
+print(musician)
+```
+
+- making an argument optional
+
+```python
+def get_formatted_name(first_name, last_name, middle_name=''):
+    """Return a full name, neatly formatted."""
+❶     if middle_name:
+        full_name = f"{first_name} {middle_name} {last_name}"
+❷     else:
+        full_name = f"{first_name} {last_name}"
+    return full_name.title()
+
+musician = get_formatted_name('jimi', 'hendrix')
+print(musician)
+
+❸ musician = get_formatted_name('john', 'hooker', 'lee')
+print(musician)
+
+
+# Jimi Hendrix
+# John Lee Hooker
+```
+
+- Returning a dictionary
+
+```python
+def build_person(first_name, last_name):
+    """Return a dictionary of information about a person."""
+❶     person = {'first': first_name, 'last': last_name}
+❷     return person
+
+musician = build_person('jimi', 'hendrix')
+❸ print(musician)
+# {'first': 'jimi', 'last': 'hendrix'}
+```
+
+```python
+def build_person(first_name, last_name, age=None):
+    """Return a dictionary of information about a person."""
+    person = {'first': first_name, 'last': last_name}
+    if age:
+        person['age'] = age
+    return person
+
+musician = build_person('jimi', 'hendrix', age=27)
+print(musician)
+```
+
+- using a function with a while Loop
+
+```python
+def get_formatted_name(first_name, last_name):
+    """Return a full name, neatly formatted."""
+    full_name = f"{first_name} {last_name}"
+    return full_name.title()
+
+while True:
+    print("\nPlease tell me your name:")
+    print("(enter 'q' at any time to quit)")
+
+    f_name = input("First name: ")
+    if f_name == 'q':
+        break
+
+    l_name = input("Last name: ")
+    if l_name == 'q':
+        break
+
+    formatted_name = get_formatted_name(f_name, l_name)
+    print(f"\nHello, {formatted_name}!")
+```
+
+## Exercise
+
+```
+Try It Yourself
+8-6. City Names: Write a function called city_country() that takes in the name of a city and its country. The function should return a string formatted like this:
+
+"Santiago, Chile"
+Call your function with at least three city-country pairs, and print the values that are returned.
+
+8-7. Album: Write a function called make_album() that builds a dictionary describing a music album. The function should take in an artist name and an album title, and it should return a dictionary containing these two pieces of information. Use the function to make three dictionaries representing different albums. Print each return value to show that the dictionaries are storing the album information correctly.
+
+Use None to add an optional parameter to make_album() that allows you to store the number of songs on an album. If the calling line includes a value for the number of songs, add that value to the album’s dictionary. Make at least one new function call that includes the number of songs on an album.
+
+8-8. User Albums: Start with your program from Exercise 8-7. Write a while loop that allows users to enter an album’s artist and title. Once you have that information, call make_album() with the user’s input and print the dictionary that’s created. Be sure to include a quit value in the while loop.
+```
