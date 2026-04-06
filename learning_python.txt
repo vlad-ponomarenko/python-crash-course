@@ -1,0 +1,3 @@
+In python you can use external modules by importing classes and functions from them
+In python you can use OOP concepts - you can create classes with common attributes and functionality
+In Python you can create lists and tuples, and work on them using math

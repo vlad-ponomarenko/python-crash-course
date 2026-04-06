@@ -3830,3 +3830,1253 @@ Before finishing code, ask:
 > Write code so others understand it **without reading the implementation**
 
 ---
+
+# CHAPTER 9 - CLASSES
+
+- In object-oriented programming, you write classes that represent real-world things and situations, and you create objects based on these classes.
+
+- When you write a class, you define the general behavior that a whole category of objects can have.
+
+* When you create individual objects from the class, each object is automatically equipped with the general behavior;
+
+* you can then give each object whatever unique traits you desire
+
+* Making an object from a class is called instantiation, and you work with instances of a class.
+
+```python
+❶ class Dog:
+    """A simple attempt to model a dog."""
+
+❷     def __init__(self, name, age):
+        """Initialize name and age attributes."""
+❸         self.name = name
+        self.age = age
+
+❹     def sit(self):
+        """Simulate a dog sitting in response to a command."""
+        print(f"{self.name} is now sitting.")
+
+    def roll_over(self):
+        """Simulate rolling over in response to a command."""
+        print(f"{self.name} rolled over!")
+
+
+my_dog = Dog('Willie', 6)
+your_dog = Dog('Lucy', 3)
+
+print(f"My dog's name is {my_dog.name}.")
+print(f"My dog is {my_dog.age} years old.")
+my_dog.sit()
+
+print(f"\nYour dog's name is {your_dog.name}.")
+print(f"Your dog is {your_dog.age} years old.")
+your_dog.sit()
+```
+
+- Variables that are accessible through instances like this are called attributes.
+
+## Exercise o
+
+```
+Try It Yourself
+9-1. Restaurant: Make a class called Restaurant. The __init__() method for Restaurant should store two attributes: a restaurant_name and a cuisine_type. Make a method called describe_restaurant() that prints these two pieces of information, and a method called open_restaurant() that prints a message indicating that the restaurant is open.
+
+Make an instance called restaurant from your class. Print the two attributes individually, and then call both methods.
+
+9-2. Three Restaurants: Start with your class from Exercise 9-1. Create three different instances from the class, and call describe_restaurant() for each instance.
+
+9-3. Users: Make a class called User. Create two attributes called first_name and last_name, and then create several other attributes that are typically stored in a user profile. Make a method called describe_user() that prints a summary of the user’s information. Make another method called greet_user() that prints a personalized greeting to the user.
+
+Create several instances representing different users, and call both methods for each user.
+
+```
+
+```python
+class Car:
+    """A simple attempt to represent a car."""
+
+    def __init__(self, make, model, year):
+        """Initialize attributes to describe a car."""
+        self.make = make
+        self.model = model
+        self.year = year
+        self.odometer_reading = 0
+
+    def get_descriptive_name(self):
+        """Return a neatly formatted descriptive name."""
+        long_name = f"{self.year} {self.make} {self.model}"
+        print(long_name)
+        return long_name.title()
+
+    def read_odometer(self):
+        """Print a statement showing the car's mileage."""
+        print(f"This car has {self.odometer_reading} miles on it.")
+
+
+my_new_car = Car("audi", "a4", 2024)
+print(my_new_car.get_descriptive_name())
+my_new_car.read_odometer()
+
+
+my_title = "helo my friend"
+print(my_title.title())
+```
+
+- You can change an attribute’s value in three ways:
+
+1. you can change the value directly through an instance,
+
+```python
+class Car:
+    --snip--
+
+my_new_car = Car('audi', 'a4', 2024)
+print(my_new_car.get_descriptive_name())
+
+my_new_car.odometer_reading = 23
+my_new_car.read_odometer()
+
+```
+
+2. set the value through a method, or
+
+```python
+class Car:
+    --snip--
+    def update_odometer(self, mileage):
+        """
+        Set the odometer reading to the given value.
+        Reject the change if it attempts to roll the odometer back.
+        """
+❶         if mileage >= self.odometer_reading:
+            self.odometer_reading = mileage
+        else:
+❷             print("You can't roll back an odometer!")
+
+my_new_car = Car('audi', 'a4', 2024)
+print(my_new_car.get_descriptive_name())
+
+❶ my_new_car.update_odometer(23)
+my_new_car.read_odometer()
+```
+
+3. increment the value (add a certain amount to it) through a method.
+
+```python
+class Car:
+    --snip--
+
+    def update_odometer(self, mileage):
+        --snip--
+
+    def increment_odometer(self, miles):
+        """Add the given amount to the odometer reading."""
+        self.odometer_reading += miles
+
+❶ my_used_car = Car('subaru', 'outback', 2019)
+print(my_used_car.get_descriptive_name())
+
+❷ my_used_car.update_odometer(23_500)
+my_used_car.read_odometer()
+
+my_used_car.increment_odometer(100)
+my_used_car.read_odometer()
+
+```
+
+## Inheritance
+
+- . When one class inherits from another, it takes on the attributes and methods of the first class. The original class is called the parent class, and the new class is the child class.
+
+- It’s also free to define new attributes and methods of its own.
+
+```python
+class Car:
+    """A simple attempt to represent a car."""
+
+    def __init__(self, make, model, year):
+        """Initialize attributes to describe a car."""
+        self.make = make
+        self.model = model
+        self.year = year
+        self.odometer_reading = 0
+
+    def get_descriptive_name(self):
+        """Return a neatly formatted descriptive name."""
+        long_name = f"{self.year} {self.make} {self.model}"
+        return long_name.title()
+
+    def read_odometer(self):
+        """Print a statement showing the car's mileage."""
+        print(f"This car has {self.odometer_reading} miles on it.")
+
+    def update_odometer(self, mileage):
+        """Set the odometer reading to the given value."""
+        if mileage >= self.odometer_reading:
+            self.odometer_reading = mileage
+        else:
+            print("You can't roll back an odometer!")
+
+    def increment_odometer(self, miles):
+        """Add the given amount to the odometer reading."""
+        self.odometer_reading += miles
+
+
+class ElectricCar(Car):
+    """Represent aspects of a car, specific to electric vehicles."""
+
+    def __init__(self, make, model, year):
+        """
+        Initialize attributes of the parent class.
+        Then initialize attributes specific to an electric car.
+        """
+        super().__init__(make, model, year)
+        self.battery_size = 40
+
+    def describe_battery(self):
+        """Print a statement describing the battery size."""
+        print(f"This car has a {self.battery_size}-kWh battery.")
+
+
+# my_new_car = Car("audi", "a4", 2024)
+# print(my_new_car.get_descriptive_name())
+# my_new_car.read_odometer()
+
+my_leaf = ElectricCar("nissan", "leaf", 2024)
+print(my_leaf.get_descriptive_name())
+my_leaf.describe_battery()
+```
+
+### Inheritance: Overriding Methods from the Parent Class
+
+```python
+class ElectricCar(Car):
+    --snip--
+
+    def fill_gas_tank(self):
+        """Electric cars don't have gas tanks."""
+        print("This car doesn't have a gas tank!")
+```
+
+### Instances As Attributes: COMPOSITION
+
+- When modeling something from the real world in code, you may find that you’re adding more and more detail to a class.
+- You’ll find that you have a growing list of attributes and methods and that your files are becoming lengthy.
+- In these situations, you might recognize that part of one class can be written as a separate class.
+- You can break your large class into smaller classes that work together; this approach is called composition.
+
+```python
+class Car:
+    --snip--
+
+class Battery:
+    """A simple attempt to model a battery for an electric car."""
+
+❶     def __init__(self, battery_size=40):
+        """Initialize the battery's attributes."""
+        self.battery_size = battery_size
+
+❷     def describe_battery(self):
+        """Print a statement describing the battery size."""
+        print(f"This car has a {self.battery_size}-kWh battery.")
+
+
+class ElectricCar(Car):
+    """Represent aspects of a car, specific to electric vehicles."""
+
+    def __init__(self, make, model, year):
+        """
+        Initialize attributes of the parent class.
+        Then initialize attributes specific to an electric car.
+        """
+        super().__init__(make, model, year)
+❸         self.battery = Battery()
+
+my_leaf = ElectricCar('nissan', 'leaf', 2024)
+print(my_leaf.get_descriptive_name())
+my_leaf.battery.describe_battery()
+
+```
+
+- As you begin to model more complicated things like electric cars, you’ll wrestle with interesting questions. Is the range of an electric car a property of the battery or of the car?
+
+- You’re thinking not about Python, but about how to represent the real world in code. When you reach this point, you’ll realize there are often no right or wrong approaches to modeling real-world situations.
+
+- If your code is working as you want it to, you’re doing well! Don’t be discouraged if you find you’re ripping apart your classes and rewriting them several times using different approaches. In the quest to write accurate, efficient code, everyone goes through this process.
+
+## Exercise
+
+```
+Try It Yourself
+9-6. Ice Cream Stand: An ice cream stand is a specific kind of restaurant. Write a class called IceCreamStand that inherits from the Restaurant class you wrote in Exercise 9-1 (page 162) or Exercise 9-4 (page 166). Either version of the class will work; just pick the one you like better. Add an attribute called flavors that stores a list of ice cream flavors. Write a method that displays these flavors. Create an instance of IceCreamStand, and call this method.
+
+9-7. Admin: An administrator is a special kind of user. Write a class called Admin that inherits from the User class you wrote in Exercise 9-3 (page 162) or Exercise 9-5 (page 167). Add an attribute, privileges, that stores a list of strings like "can add post", "can delete post", "can ban user", and so on. Write a method called show_privileges() that lists the administrator’s set of privileges. Create an instance of Admin, and call your method.
+
+9-8. Privileges: Write a separate Privileges class. The class should have one attribute, privileges, that stores a list of strings as described in Exercise 9-7. Move the show_privileges() method to this class. Make a Privileges instance as an attribute in the Admin class. Create a new instance of Admin and use your method to show its privileges.
+
+9-9. Battery Upgrade: Use the final version of electric_car.py from this section. Add a method to the Battery class called upgrade_battery(). This method should check the battery size and set the capacity to 65 if it isn’t already. Make an electric car with a default battery size, call get_range() once, and then call get_range() a second time after upgrading the battery. You should see an increase in the car’s range.
+
+```
+
+```python
+# my example
+class Car:
+    """A simple attempt to represent a car."""
+
+    def __init__(self, make, model, year):
+        """Initialize attributes to describe a car."""
+        self.make = make
+        self.model = model
+        self.year = year
+        self.odometer_reading = 0
+
+    def get_descriptive_name(self):
+        """Return a neatly formatted descriptive name."""
+        long_name = f"{self.year} {self.make} {self.model}"
+        return long_name.title()
+
+    def read_odometer(self):
+        """Print a statement showing the car's mileage."""
+        print(f"This car has {self.odometer_reading} miles on it.")
+
+    def update_odometer(self, mileage):
+        """Set the odometer reading to the given value."""
+        if mileage >= self.odometer_reading:
+            self.odometer_reading = mileage
+        else:
+            print("You can't roll back an odometer!")
+
+    def increment_odometer(self, miles):
+        """Add the given amount to the odometer reading."""
+        self.odometer_reading += miles
+
+
+class Battery:
+    """A simple attempt to model a battery for an electric car."""
+
+    def __init__(self, battery_size=40):
+        """Initialize the battery's attributes."""
+        self.battery_size = battery_size
+
+    def describe_battery(self):
+        """Print a statement describing the battery size."""
+        print(f"This car has a {self.battery_size}-kWh battery.")
+
+    def get_range(self):
+        """Print a statement about the range this battery provides."""
+        if self.battery_size == 40:
+            range = 150
+        elif self.battery_size == 65:
+            range = 225
+
+        print(f"This car can go about {range} miles on a full charge.")
+
+    def upgrade_battery(self):
+        if not self.battery_size == 65:
+            self.battery_size = 65
+
+
+class ElectricCar(Car):
+    """Represent aspects of a car, specific to electric vehicles."""
+
+    def __init__(self, make, model, year):
+        """
+        Initialize attributes of the parent class.
+        Then initialize attributes specific to an electric car.
+        """
+        super().__init__(make, model, year)
+        self.battery = Battery()
+
+
+# my_new_car = Car("audi", "a4", 2024)
+# print(my_new_car.get_descriptive_name())
+# my_new_car.read_odometer()
+
+my_leaf = ElectricCar("nissan", "leaf", 2024)
+print(my_leaf.get_descriptive_name())
+my_leaf.battery.describe_battery()
+my_leaf.battery.get_range()
+my_leaf.battery.upgrade_battery()
+my_leaf.battery.describe_battery()
+my_leaf.battery.get_range()
+
+```
+
+```python
+# gemini example
+class User:
+    """A simple model of a user profile."""
+    def __init__(self, first_name, last_name, age, country):
+        self.first_name = first_name
+        self.last_name = last_name
+        self.age = age
+        self.country = country
+        self.login_attempts = 0
+
+    def describe_user(self):
+        print(f"\nUser Profile:")
+        print(f" - Name: {self.first_name} {self.last_name}")
+        print(f" - Age: {self.age}")
+        print(f" - Location: {self.country}")
+
+    def increment_login_attempts(self):
+        self.login_attempts += 1
+
+    def reset_login_attempts(self):
+        self.login_attempts = 0
+
+
+class Privileges:
+    """A class to store an admin's privileges."""
+    def __init__(self, privileges=None):
+        if privileges is None:
+            self.privileges = ["can add post", "can delete post", "can ban user"]
+        else:
+            self.privileges = privileges
+
+    def show_privileges(self):
+        print("The admin has the following privileges:")
+        for privilege in self.privileges:
+            print(f"\t- {privilege}")
+
+
+class Admin(User):
+    """A user with administrative privileges."""
+    def __init__(self, first_name, last_name, age, country):
+        # Initialize attributes from the parent class
+        super().__init__(first_name, last_name, age, country)
+
+        # Create a Privileges instance as an attribute (Composition)
+        self.privileges = Privileges()
+
+
+# --- Testing the Classes ---
+
+# 1. Create the Admin instance
+admin_alex = Admin("Alex", "Arkhipov", 31, "Russia")
+
+# 2. Describe the user (Method inherited from User)
+admin_alex.describe_user()
+
+# 3. Show privileges (Method called from the Privileges instance inside Admin)
+admin_alex.privileges.show_privileges()
+```
+
+## Improting Classes
+
+- As you add more functionality to your classes, your files can get long, even when you use inheritance and composition properly.
+- In keeping with the overall philosophy of Python, you’ll want to keep your files as uncluttered as possible.
+- To help, Python lets you store classes in modules and then import the classes you need into your main program.
+
+```python
+"""A class that can be used to represent a car."""
+
+
+class Car:
+    """A simple attempt to represent a car."""
+
+    def __init__(self, make, model, year):
+        """Initialize attributes to describe a car."""
+        self.make = make
+        self.model = model
+        self.year = year
+        self.odometer_reading = 0
+
+    def get_descriptive_name(self):
+        """Return a neatly formatted descriptive name."""
+        long_name = f"{self.year} {self.make} {self.model}"
+        return long_name.title()
+
+    def read_odometer(self):
+        """Print a statement showing the car's mileage."""
+        print(f"This car has {self.odometer_reading} miles on it.")
+
+    def update_odometer(self, mileage):
+        """
+        Set the odometer reading to the given value.
+        Reject the change if it attempts to roll the odometer back.
+        """
+        if mileage >= self.odometer_reading:
+            self.odometer_reading = mileage
+        else:
+            print("You can't roll back an odometer!")
+
+    def increment_odometer(self, miles):
+        """Add the given amount to the odometer reading."""
+        self.odometer_reading += miles
+
+
+class Battery:
+    """A simple attempt to model a battery for an electric car."""
+
+    def __init__(self, battery_size=40):
+        """Initialize the battery's attributes."""
+        self.battery_size = battery_size
+
+    def describe_battery(self):
+        """Print a statement describing the battery size."""
+        print(f"This car has a {self.battery_size}-kWh battery.")
+
+    def get_range(self):
+        """Print a statement about the range this battery provides."""
+        if self.battery_size == 40:
+            range = 150
+        elif self.battery_size == 65:
+            range = 225
+
+        print(f"This car can go about {range} miles on a full charge.")
+
+class ElectricCar(Car):
+    """Models aspects of a car, specific to electric vehicles."""
+
+    def __init__(self, make, model, year):
+        """
+        Initialize attributes of the parent class.
+        Then initialize attributes specific to an electric car.
+        """
+        super().__init__(make, model, year)
+        self.battery = Battery()
+```
+
+- The import statement ❶ tells Python to open the car module and import the class Car. Now we can use the Car class as if it were defined in this file
+
+```python
+# my_car.py
+from car import Car
+
+my_new_car = Car("audi", "a4", 2024)
+print(my_new_car.get_descriptive_name())
+
+my_new_car.odometer_reading = 23
+my_new_car.read_odometer()
+
+```
+
+```python
+from car import ElectricCar
+
+my_leaf = ElectricCar("nissan", "leaf", 2024)
+print(my_leaf.get_descriptive_name())
+my_leaf.battery.describe_battery()
+my_leaf.battery.get_range()
+```
+
+- importing multiple classes from a module
+
+```python
+from car import Car, ElectricCar
+
+my_mustang = Car('ford', 'mustang', 2024)
+print(my_mustang.get_descriptive_name())
+my_leaf = ElectricCar('nissan', 'leaf', 2024)
+print(my_leaf.get_descriptive_name())
+```
+
+- importing an entire modle
+
+```python
+# from car import Car, ElectricCar
+import car
+
+my_mustang = car.Car("ford", "mustang", 2024)
+print(my_mustang.get_descriptive_name())
+
+my_leaf = car.ElectricCar("nissan", "leaf", 2024)
+print(my_leaf.get_descriptive_name())
+
+```
+
+```python
+# not recommended due to naming conflicts, errors
+from module_name import *
+```
+
+- importing module into a module
+
+* Sometimes you’ll want to spread out your classes over several modules to keep any one file from growing too large and avoid storing unrelated classes in the same module
+
+* Whena calss in one module depends on a class in another module, you can import the required class into the first module
+
+```python
+# car.py
+"""A class that can be used to represent a car."""
+
+class Car:
+    --snip--
+```
+
+```python
+# electric_carp.py
+"""A set of classes that can be used to represent electric cars."""
+
+from car import Car
+
+class Battery:
+    --snip--
+
+class ElectricCar(Car):
+    --snip--
+```
+
+```python
+# my_cars.py
+from car import Car
+from electric_car import ElectricCar
+
+my_mustang = Car('ford', 'mustang', 2024)
+print(my_mustang.get_descriptive_name())
+
+my_leaf = ElectricCar('nissan', 'leaf', 2024)
+print(my_leaf.get_descriptive_name())
+```
+
+- using aliases
+
+```python
+from electric_car import ElectricCar as EC
+my_leaf = EC('nissan', 'leaf', 2024)
+
+# you can also give a module an alias
+import electric_car as ec
+my_leaf = ec.ElectricCar('nissan', 'leaf', 2024)
+```
+
+- When you’re starting out, keep your code structure simple. Try doing everything in one file and moving your classes to separate modules once everything is working.
+- If you like how modules and files interact, try storing your classes in modules when you start a project. Find an approach that lets you write code that works, and go from there.
+
+## Exercise
+
+```
+Try It Yourself
+9-10. Imported Restaurant: Using your latest Restaurant class, store it in a module. Make a separate file that imports Restaurant. Make a Restaurant instance, and call one of Restaurant’s methods to show that the import statement is working properly.
+
+9-11. Imported Admin: Start with your work from Exercise 9-8 (page 173). Store the classes User, Privileges, and Admin in one module. Create a separate file, make an Admin instance, and call show_privileges() to show that everything is working correctly.
+
+9-12. Multiple Modules: Store the User class in one module, and store the Privileges and Admin classes in a separate module. In a separate file, create an Admin instance and call show_privileges() to show that everything is still working correctly.
+```
+
+## The Python Standard Library
+
+- The Python standard library is a set of modules included with every Python installation
+
+```python
+>>> from random import randint
+# generate a random number between 1 and 6
+>>> randint(1, 6)
+3
+```
+
+```python
+>>> from random import choice
+>>> players = ['charles', 'martina', 'michael', 'florence', 'eli']
+# This function takes in a list or tuple and returns a randomly chosen element
+>>> first_up = choice(players)
+>>> first_up
+'florence'
+```
+
+- You can also download modules from external sources -> PART 2
+
+## Exercise
+
+```
+Try It Yourself
+9-13. Dice: Make a class Die with one attribute called sides, which has a default value of 6. Write a method called roll_die() that prints a random number between 1 and the number of sides the die has. Make a 6-sided die and roll it 10 times.
+
+Make a 10-sided die and a 20-sided die. Roll each die 10 times.
+
+9-14. Lottery: Make a list or tuple containing a series of 10 numbers and 5 letters. Randomly select 4 numbers or letters from the list and print a message saying that any ticket matching these 4 numbers or letters wins a prize.
+
+9-15. Lottery Analysis: You can use a loop to see how hard it might be to win the kind of lottery you just modeled. Make a list or tuple called my_ticket. Write a loop that keeps pulling numbers until your ticket wins. Print a message reporting how many times the loop had to run to give you a winning ticket.
+
+9-16. Python Module of the Week: One excellent resource for exploring the Python standard library is a site called Python Module of the Week. Go to https://pymotw.com and look at the table of contents. Find a module that looks interesting to you and read about it, perhaps starting with the random module.
+```
+
+## Styling Classes
+
+- Class names should be written in CamelCase. To do this, capitalize the first letter of each word in the name, and don’t use underscores.
+
+- Instance and module names should be written in lowercase, with underscores between words.
+
+- Every class should have a docstring immediately following the class definition.
+- The docstring should be a brief description of what the class does, and you should follow the same formatting conventions you used for writing docstrings in functions.
+
+* Each module should also have a docstring describing what the classes in a module can be used for.
+
+* You can use blank lines to organize code, but don’t use them excessively. Within a class you can use one blank line between methods, and within a module you can use two blank lines to separate classes.
+
+* If you need to import a module from the standard library and a module that you wrote, place the import statement for the standard library module first. Then add a blank line and the import statement for the module you wrote.
+
+* In programs with multiple import statements, this convention makes it easier to see where the different modules used in the program come from.
+
+```
+Good—this is exactly the level you should focus on.
+Here’s a tight, no-fluff checklist you can actually apply daily.
+
+🧠 Core Naming Rules
+Classes → CamelCase
+TimeTracker, UserSession
+Functions / variables → snake_case
+get_user_data, active_sessions
+Constants → UPPER_CASE
+MAX_RETRIES
+🧱 Structure Rules
+Files (modules)
+one clear responsibility per file
+avoid “utils.py” dumping ground
+Classes
+class TimeTracker:
+    """Track user work sessions."""
+always add docstring
+keep classes focused (not 1000 lines)
+Functions
+do one thing
+≤ ~20–30 lines ideally
+name describes behavior
+
+Bad:
+
+def process():
+
+Good:
+
+def calculate_daily_hours():
+📏 Formatting Rules
+Indentation
+4 spaces (no tabs)
+Line length
+≤ 80–88 chars
+break long lines manually
+Blank lines
+2 lines → between top-level classes/functions
+1 line → between class methods
+0 lines → inside tight logic blocks
+📦 Imports (VERY IMPORTANT)
+
+Order:
+
+# standard library
+import os
+import datetime
+
+# third-party
+from fastapi import FastAPI
+
+# local
+from app.services.tracker import TimeTracker
+
+👉 always group + separate
+
+🔁 Loops & Data
+prefer .items() for dicts
+avoid repeated lookups
+avoid deep nesting
+🧠 Control Flow
+Prefer early returns
+
+Bad:
+
+if user:
+    if user.active:
+        do_something()
+
+Good:
+
+if not user:
+    return
+if not user.active:
+    return
+
+do_something()
+⚠️ Avoid “JS habits”
+
+❌ chaining everything
+❌ overly compact code
+❌ unnecessary abstractions
+
+🔥 Strings
+use f-strings
+f"User: {name}"
+split long strings with parentheses
+🧪 Error handling
+
+Be explicit:
+
+if data is None:
+    raise ValueError("Missing data")
+🧠 Comments
+explain why, not what
+
+Bad:
+
+# increment i
+i += 1
+
+Good:
+
+# skip invalid entries
+🧩 Complexity
+avoid functions with:
+too many parameters (>4–5)
+deep nesting
+unclear flow
+⚡ FastAPI-specific (for your job)
+keep routes thin
+move logic to services
+
+Bad:
+
+@app.get("/users")
+def get_users():
+    # 50 lines of logic
+
+Good:
+
+@app.get("/users")
+def get_users():
+    return user_service.get_all_users()
+💥 Golden Rules (memorize these)
+Readable > clever
+Flat > nested
+Explicit > implicit
+Simple > abstract
+One clear way > many options
+🧠 Quick self-check before saving
+
+Ask:
+
+Can someone understand this in 5 seconds?
+Is anything unnecessarily clever?
+Can I simplify one thing?
+
+That’s enough to write clean, professional Python at your job.
+
+If you want next, I can give you:
+
+👉 a “bad vs good Python file” (real FastAPI example)
+→ this locks everything in instantly
+```
+
+## SUMMARY CHAPTER 9
+
+Summary
+In this chapter, you learned how to write your own classes. You learned how to store information in a class using attributes and how to write methods that give your classes the behavior they need. You learned to write **init**() methods that create instances from your classes with exactly the attributes you want. You saw how to modify the attributes of an instance directly and through methods. You learned that inheritance can simplify the creation of classes that are related to each other, and you learned to use instances of one class as attributes in another class to keep each class simple.
+
+You saw how storing classes in modules and importing classes you need into the files where they’ll be used can keep your projects organized. You started learning about the Python standard library, and you saw an example based on the random module. Finally, you learned to style your classes using Python conventions.
+
+In Chapter 10, you’ll learn to work with files so you can save the work you’ve done in a program and the work you’ve allowed users to do.
+
+You’ll also learn about exceptions, a special Python class designed to help you respond to errors when they arise.
+
+# CHAPTER 10 - FILES and EXCEPTIONS
+
+1. Reading from a File
+2. Writing to a File
+3. Exceptions
+4. Storing Data
+5. Summary
+
+- Exceptions, which are special objects Python creates to manage errors that arise while a program is running.
+- the json module, which allows you to save user data so it isn’t lost when your program stops running.
+
+- bad data, malicious attempts to break programs
+
+## Reading from a File
+
+- When you want to work with the information in a text file, the first step is to read the file into memory.
+
+- You can then work through all of the file’s contents at once or work through the contents line by line.
+
+```txt
+# pi_digits.txx
+3.1415926535
+  8979323846
+  2643383279
+```
+
+```python
+from pathlib import Path
+
+# For example, you can check that the file exists before working with it, read the file’s contents, or write new data to the file.
+path = Path('pi_digits.txt')
+contents = path.read_text()
+print(contents)
+
+# path = Path('chapter10/pi_digits.txt') - depends on where the terminal is
+```
+
+- To work with the contents of a file, we need to tell Python the path to the file.
+- A path is the exact location of a file or folder on a system.
+- Python provides a module called pathlib that makes it easier to work with files and directories, no matter which operating system you or your program’s users are working with.
+- A module that provides specific functionality like this is often called a library, hence the name pathlib
+
+```python
+from pathlib import Path
+
+path = Path('pi_digits.txt')
+contents = path.read_text()
+contents = contents.rstrip()
+print(contents)
+```
+
+```python
+# method chaining
+contents = path.read_text().rstrip()
+```
+
+```python
+# relative path
+path = Path('text_files/filename.txt')
+
+# absolute path
+path = Path('/home/eric/data_files/text_files/filename.txt')
+
+```
+
+- splitlines()
+
+```python
+from pathlib import Path
+
+path = Path('pi_digits.txt')
+contents = path.read_text()
+
+lines = contents.splitlines()
+pi_string = ''
+for line in lines:
+    pi_string += line
+
+print(pi_string)
+print(len(pi_string))
+```
+
+```
+# containts whitespace that was on th left side of the digits in each line
+
+3.1415926535  8979323846  2643383279
+36
+```
+
+```python
+for line in lines:
+    pi_string += line.lstrip()
+
+print(pi_string)
+print(len(pi_string))
+
+# 3.141592653589793238462643383279
+# 32
+```
+
+```python
+# py_string.py
+from pathlib import Path
+
+path = Path('pi_million_digits.txt')
+contents = path.read_text()
+
+lines = contents.splitlines()
+pi_string = ''
+for line in lines:
+    pi_string += line.lstrip()
+
+print(f"{pi_string[:52]}...")
+print(len(pi_string))
+
+# 3.14159265358979323846264338327950288419716939937510...
+# 1000002
+```
+
+```python
+--snip--
+for line in lines:
+    pi_string += line.strip()
+
+birthday = input("Enter your birthday, in the form mmddyy: ")
+if birthday in pi_string:
+    print("Your birthday appears in the first million digits of pi!")
+else:
+    print("Your birthday does not appear in the first million digits of pi.")
+
+```
+
+## EXERCISE
+
+```
+Try It Yourself
+10-1. Learning Python: Open a blank file in your text editor and write a few lines summarizing what you’ve learned about Python so far. Start each line with the phrase In Python you can. . . . Save the file as learning_python.txt in the same directory as your exercises from this chapter. Write a program that reads the file and prints what you wrote two times: print the contents once by reading in the entire file, and once by storing the lines in a list and then looping over each line.
+
+10-2. Learning C: You can use the replace() method to replace any word in a string with a different word. Here’s a quick example showing how to replace 'dog' with 'cat' in a sentence:
+
+>>> message = "I really like dogs."
+>>> message.replace('dog', 'cat')
+'I really like cats.'
+Read in each line from the file you just created, learning_python.txt, and replace the word Python with the name of another language, such as C. Print each modified line to the screen.
+
+10-3. Simpler Code: The program file_reader.py in this section uses a temporary variable, lines, to show how splitlines() works. You can skip the temporary variable and loop directly over the list that splitlines() returns:
+
+for line in contents.splitlines():
+Remove the temporary variable from each of the programs in this section, to make them more concise.
+```
+
+- use replace() method
+
+```python
+>>> message = "I really like dogs."
+>>> message.replace('dog', 'cat')
+'I really like cats.'
+```
+
+```python
+from pathlib import Path
+
+path = Path("learning_python.txt")
+contents = path.read_text()
+
+# print(contents)
+
+for line in contents.splitlines():
+    line = line.replace("Python", "Java")
+    print(line)
+```
+
+### COOL - no temporary variable
+
+```python
+for line in contents.splitlines():
+```
+
+```python
+from pathlib import Path
+
+path = Path("pi_digits.txt")
+contents = path.read_text()
+
+
+pi_string = ""
+for line in contents.splitlines():
+    pi_string += line.lstrip()
+
+print(pi_string)
+print(len(pi_string))
+```
+
+## WRITING TO A FILE
+
+```python
+from pathlib import Path
+
+path = Path('programming.txt')
+path.write_text("I love programming.")
+```
+
+- Note
+  Python can only write strings to a text file. If you want to store numerical data in a text file, you’ll have to convert the data to string format first using the str() function.
+
+- The write_text() method does a few things behind the scenes. If the file that path points to doesn’t exist, it creates that file.
+- Also, after writing the string to the file, it makes sure the file is closed properly. Files that aren’t closed properly can lead to missing or corrupted data.
+
+* writing multiple lines
+
+```python
+from pathlib import Path
+
+contents = "I love programming.\n"
+contents += "I love creating new games.\n"
+contents += "I also love working with data.\n"
+
+path = Path('programming.txt')
+path.write_text(contents)
+```
+
+- Be careful when calling write_text() on a path object. If the file already exists, write_text() will erase the current contents of the file and write new contents to the file.
+- Later in this chapter, you’ll learn to check whether a file exists using pathlib.
+
+## EXERCISE
+
+```
+10-4. Guest: Write a program that prompts the user for their name. When they respond, write their name to a file called guest.txt.
+
+10-5. Guest Book: Write a while loop that prompts users for their name. Collect all the names that are entered, and then write these names to a file called guest_book.txt. Make sure each entry appears on a new line in the file.
+```
+
+## Exceptions
+
+- Python uses special objects called exceptions to manage errors that arise during a program’s execution.
+- Whenever an error occurs that makes Python unsure of what to do next, it creates an exception object.
+- If you write code that handles the exception, the program will continue running.
+- If you don’t handle the exception, the program will halt and show a traceback, which includes a report of the exception that was raised.
+
+- Exceptions are handled with try-except blocks. A try-except block asks Python to do something, but it also tells Python what to do if an exception is raised. When you use try-except blocks, your programs will continue running even if things start to go wrong. Instead of tracebacks, which can be confusing for users to read, users will see
+  friendly error messages that you’ve written.
+
+```python
+try:
+    print(5/0)
+    # Exception object
+except ZeroDivisionError:
+    print("You can't divide by zero!")
+```
+
+- It’s bad that the program crashed, but it’s also not a good idea to let users see tracebacks.
+- Nontechnical users will be confused by them, and in a malicious setting, attackers will learn more than you want them to. For example, they’ll know the name of your program file, and they’ll see a part of your code that isn’t working properly.
+- A skilled attacker can sometimes use this information to determine which kind of attacks to use against your code.
+
+```python
+print("Give me two numbers, and I'll divide them.")
+print("Enter 'q' to quit.")
+
+while True:
+    first_number = input("\nFirst number: ")
+    if first_number == "q":
+        break
+    second_number = input("Second number: ")
+    if second_number == "q":
+        break
+
+    try:
+        answer = int(first_number) / int(second_number)
+    except ZeroDivisionError:
+        print("You can't divide by 0!")
+
+    else:
+        print(answer)
+
+```
+
+- handling missing file exception
+
+```python
+from pathlib import Path
+
+path = Path('alice.txt')
+contents = path.read_text(encoding='utf-8')
+```
+
+```python
+Traceback (most recent call last):
+❶   File "alice.py", line 4, in <module>
+❷     contents = path.read_text(encoding='utf-8')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/.../pathlib.py", line 1056, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/.../pathlib.py", line 1042, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+❸ FileNotFoundError: [Errno 2] No such file or directory: 'alice.txt'
+```
+
+- It’s often best to start at the very end of the traceback. On the last line, we can see that a FileNotFoundError exception was raised ❸. This is important because it tells us what kind of exception to use in the except block that we’ll write.
+
+- Looking back near the beginning of the traceback ❶, we can see that the error occurred at line 4 in the file alice.py. The next line shows the line of code that caused the error ❷. The rest of the traceback shows some code from the libraries that are involved in opening and reading from files. You don’t usually need to read through or understand all of these lines in a traceback.
+
+- To handle the error that’s being raised, the try block will begin with the line that was identified as problematic in the traceback. In our example, this is the line that contains read_text():
+
+```python
+from pathlib import Path
+
+path = Path("alice.txt")
+try:
+    contents = path.read_text(encoding="utf-8")
+except FileNotFoundError:
+    print(f"Sorry, the file {path} does not exist.")
+
+```
+
+- how exception handling can help when you’re working with more than one file.
+
+```python
+from pathlib import Path
+
+path = Path('alice.txt')
+try:
+    contents = path.read_text(encoding='utf-8')
+except FileNotFoundError:
+    print(f"Sorry, the file {path} does not exist.")
+else:
+    # Count the approximate number of words in the file:
+❶     words = contents.split()
+❷     num_words = len(words)
+    print(f"The file {path} has about {num_words} words.")
+
+
+print("abc".split())
+# ['abc']
+```
+
+- We take the string contents, which now contains the entire text of Alice in Wonderland as one long string, and use split() to produce a list of all the words in the book ❶. Using len() on this list ❷ gives us a good approximation of the number of words in the original text.
+
+* working with multiple files
+
+```
+word_count.py
+```
+
+```python
+from pathlib import Path
+
+
+def count_words(path):
+    """Count the approximate number of words in a file."""
+    try:
+        contents = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        print(f"Sorry, the file {path} does not exist.")
+    else:
+        # Count the approximate number of words in the file:
+        words = contents.split()
+        num_words = len(words)
+        print(f"The file {path} has about {num_words} words.")
+
+
+path = Path("alice.txt")
+count_words(path)
+
+
+```
+
+- We prevent our users from seeing a traceback, and we let the program continue analyzing the texts it’s able to find.
+
+```python
+from pathlib import Path
+
+def count_words(filename):
+    --snip--
+
+filenames = ['alice.txt', 'siddhartha.txt', 'moby_dick.txt',
+        'little_women.txt']
+for filename in filenames:
+❶   path = Path(filename)
+    count_words(path)
+
+```
+
+- FAILING SILIENTLY
+
+```python
+def count_words(path):
+    """Count the approximate number of words in a file."""
+    try:
+        --snip--
+    except FileNotFoundError:
+        pass
+    else:
+        --snip--
+```
+
+- Deciding which error to report:
+
+- How do you know when to report an error to your users and when to let your program fail silently
+
+- Giving users information they aren’t looking for can decrease the usability of your program.
+
+- Python’s error-handling structures give you fine-grained control over how much to share with users when things go wrong; it’s up to you to decide how much information to share
+
+- Well-written, properly tested code is not very prone to internal errors, such as syntax or logical errors.
+
+- But every time your program depends on something external such as user input, the existence of a file, or the availability of a network connection, there is a possibility of an exception being raised.
+
+- A little experience will help you know where to include exception-handling blocks in your program and how much to report to users about errors that arise.
+
+## EXERCISE
