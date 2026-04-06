@@ -3354,3 +3354,479 @@ Use None to add an optional parameter to make_album() that allows you to store t
 
 8-8. User Albums: Start with your program from Exercise 8-7. Write a while loop that allows users to enter an album’s artist and title. Once you have that information, call make_album() with the user’s input and print the dictionary that’s created. Be sure to include a quit value in the while loop.
 ```
+
+## Passing a List
+
+```python
+def greet_users(names):
+    """Print a simple greeting to each user in the list."""
+    for name in names:
+        msg = f"Hello, {name.title()}!"
+        print(msg)
+
+usernames = ['hannah', 'ty', 'margot']
+greet_users(usernames)
+```
+
+## Modifying a List in a Function
+
+- Any changes made to the list inside the function’s body are permanent
+
+- reorganizing the code
+
+```python
+# Start with some designs that need to be printed.
+unprinted_designs = ['phone case', 'robot pendant', 'dodecahedron']
+completed_models = []
+
+# Simulate printing each design, until none are left.
+#  Move each design to completed_models after printing.
+while unprinted_designs:
+    current_design = unprinted_designs.pop()
+    print(f"Printing model: {current_design}")
+    completed_models.append(current_design)
+
+# Display all completed models.
+print("\nThe following models have been printed:")
+for completed_model in completed_models:
+    print(completed_model)
+```
+
+- This example also demonstrates the idea that every function should have one specific job.
+- If you’re writing a function and notice the function is doing too many different tasks, try to split the code into two functions.
+
+```python
+❶ def print_models(unprinted_designs, completed_models):
+    """
+    Simulate printing each design, until none are left.
+    Move each design to completed_models after printing.
+    """
+    while unprinted_designs:
+        current_design = unprinted_designs.pop()
+        print(f"Printing model: {current_design}")
+        completed_models.append(current_design)
+
+❷ def show_completed_models(completed_models):
+    """Show all the models that were printed."""
+    print("\nThe following models have been printed:")
+    for completed_model in completed_models:
+        print(completed_model)
+
+unprinted_designs = ['phone case', 'robot pendant', 'dodecahedron']
+completed_models = []
+
+print_models(unprinted_designs, completed_models)
+show_completed_models(completed_models)
+
+```
+
+## Preventing a Function from Modifying a List
+
+```python
+print_models(unprinted_designs[:], completed_models)
+```
+
+## Passing an Arbitrary Number of Arguments
+
+- Python allows a function to collect an arbitrary number of arguments from the calling statement.
+
+- tells Python to make a tuple called toppings, containing all the values this function receives.
+
+- Note that Python packs the arguments into a tuple, even if the function receives only one value:
+
+```
+('pepperoni',)
+('mushrooms', 'green peppers', 'extra cheese')
+```
+
+```python
+def make_pizza(*toppings):
+    """Print the list of toppings that have been requested."""
+    print(toppings)
+
+make_pizza('pepperoni')
+make_pizza('mushrooms', 'green peppers', 'extra cheese')
+```
+
+```python
+def make_pizza(*toppings):
+    """Summarize the pizza we are about to make."""
+    print("\nMaking a pizza with the following toppings:")
+    for topping in toppings:
+        print(f"- {topping}")
+
+make_pizza('pepperoni')
+make_pizza('mushrooms', 'green peppers', 'extra cheese')
+```
+
+## Mixing Positional and Arbitrary Arguments
+
+- If you want a function to accept several different kinds of arguments, the parameter that accepts an arbitrary number of arguments must be placed last in the function definition.
+
+- Python matches positional and keyword arguments first and then collects any remaining arguments in the final parameter.
+
+```python
+def make_pizza(size, *toppings):
+    """Summarize the pizza we are about to make."""
+    print(f"\nMaking a {size}-inch pizza with the following toppings:")
+    for topping in toppings:
+        print(f"- {topping}")
+
+make_pizza(16, 'pepperoni')
+make_pizza(12, 'mushrooms', 'green peppers', 'extra cheese')
+```
+
+- You’ll often see the generic parameter name \*args, which collects arbitrary positional arguments like this.
+
+## Using Arbitrary Keyword Arguments
+
+- The double asterisks before the parameter \*\*user_info cause Python to create a dictionary called user_info containing all the extra name-value pairs the function receives
+
+```python
+def build_profile(first, last, **user_info):
+    """Build a dictionary containing everything we know about a user."""
+❶     user_info['first_name'] = first
+    user_info['last_name'] = last
+    return user_info
+
+user_profile = build_profile('albert', 'einstein',
+                             location='princeton',
+                             field='physics')
+print(user_profile)
+```
+
+- You’ll often see the parameter name \*\*kwargs used to collect nonspecific keyword arguments.
+
+## Exercise
+
+```
+Try It Yourself
+8-12. Sandwiches: Write a function that accepts a list of items a person wants on a sandwich. The function should have one parameter that collects as many items as the function call provides, and it should print a summary of the sandwich that’s being ordered. Call the function three times, using a different number of arguments each time.
+
+8-13. User Profile: Start with a copy of user_profile.py from page 148. Build a profile of yourself by calling build_profile(), using your first and last names and three other key-value pairs that describe you.
+
+8-14. Cars: Write a function that stores information about a car in a dictionary. The function should always receive a manufacturer and a model name. It should then accept an arbitrary number of keyword arguments. Call the function with the required information and two other name-value pairs, such as a color or an optional feature. Your function should work for a call like this one:
+
+car = make_car('subaru', 'outback', color='blue', tow_package=True)
+Print the dictionary that’s returned to make sure all the information was stored correctly.
+```
+
+- WTF IS THIS BULLSHIT?
+
+```python
+def get_items(*toppings):
+    print("\nThe following toppings are provided:")
+    for topping in toppings:
+        print(f"- {topping}")
+
+
+get_items(["a"])
+get_items(["a", "b"])
+get_items(["c", "b", "a"])
+
+items = ["a", "b"]
+get_items(*items)   # ✅ unpacking
+```
+
+```
+The following toppings are provided: - ['a', 'b'] The following toppings are provided: - ['c', 'b', 'a']
+
+```
+
+- correct
+
+```python
+get_items("a")
+get_items("a", "b")
+get_items("c", "b", "a")
+```
+
+```python
+def make_car(manufacturer, model, **kvargs):
+    kvargs["manufacturer"] = manufacturer
+    kvargs["model"] = model
+    return kvargs
+
+
+my_car = make_car("audi", "tt", color="blue", tow_package=True)
+print(my_car)
+
+```
+
+## Storing Your Functions in Modules
+
+- When you use descriptive names for your functions, your programs become much easier to follow
+- You can go a step further by storing your functions in a separate file called a module and then importing that module into your main program.
+- An import statement tells Python to make the code in a module available in the currently running program file.
+
+- Storing your functions in a separate file allows you to hide the details of your program’s code and focus on its higher-level logic.
+- It also allows you to reuse functions in many different programs.
+
+### Importing an Entire Module
+
+- pizza is name of the module
+- module_name.function_name()
+
+```python
+# pizza.py
+def make_pizza(size, *toppings):
+    """Summarize the pizza we are about to make."""
+    print(f"\nMaking a {size}-inch pizza with the following toppings:")
+    for topping in toppings:
+        print(f"- {topping}")
+```
+
+- When Python reads this file, the line import pizza tells Python to open the file pizza.py and copy all the functions from it into this program
+
+```python
+# making_pizzas.py
+import pizza
+
+pizza.make_pizza(16, 'pepperoni')
+pizza.make_pizza(12, 'mushrooms', 'green peppers', 'extra cheese')
+```
+
+### Importing Specific Functions
+
+```python
+from module_name import function_name
+from module_name import function_0, function_1, function_2
+```
+
+```python
+from pizza import make_pizza
+
+make_pizza(16, 'pepperoni')
+make_pizza(12, 'mushrooms', 'green peppers', 'extra cheese')
+```
+
+### Using as to Give a Function an Alias
+
+```python
+from module_name import function_name as fn
+```
+
+```python
+from pizza import make_pizza as mp
+
+mp(16, 'pepperoni')
+mp(12, 'mushrooms', 'green peppers', 'extra cheese')
+```
+
+### Using as to Give a Module an Alias
+
+```python
+import module_name as mn
+```
+
+```python
+import pizza as p
+
+p.make_pizza(16, 'pepperoni')
+p.make_pizza(12, 'mushrooms', 'green peppers', 'extra cheese')
+
+```
+
+### Importing all functions in a Module
+
+```python
+from module_name import *
+```
+
+```python
+from pizza import *
+
+make_pizza(16, 'pepperoni')
+make_pizza(12, 'mushrooms', 'green peppers', 'extra cheese')
+```
+
+- The asterisk in the import statement tells Python to copy every function from the module pizza into this program file.
+
+Because every function is imported, you can call each function by name without using the dot notation.
+
+However, it’s best not to use this approach when you’re working with larger modules that you didn’t write:
+
+- if the module has a function name that matches an existing name in your project, you can get unexpected results.
+- Python may see several functions or variables with the same name, and instead of importing all the functions separately, it will overwrite the functions.
+
+- The best approach is to import the function or functions you want, or import the entire module and use the dot notation
+
+```python
+from module_name import *
+```
+
+## Styling Functions
+
+- If you specify a default value for a parameter, no spaces should be used on either side of the equal sign
+- The same convention should be used for keyword arguments in function calls:
+
+```python
+def function_name(parameter_0, parameter_1='default value')
+function_name(value_0, parameter_1='value')
+```
+
+- Functions should have descriptive names, and these names should use lowercase letters and underscores.
+- Every function should have a comment that explains concisely what the function does.
+- This comment should appear immediately after the function definition and use the docstring format
+
+```
+ In a well-documented function, other programmers can use the function by reading only the description in the docstring. They should be able to trust that the code works as described, and as long as they know the name of the function, the arguments it needs, and the kind of value it returns, they should be able to use it in their programs.
+```
+
+```
+PEP 8 (https://www.python.org/dev/peps/pep-0008) recommends that you limit lines of code to 79 characters so every line is visible in a reasonably sized editor window. If a set of parameters causes a function’s definition to be longer than 79 characters, press ENTER after the opening parenthesis on the definition line. On the next line, press the TAB key twice to separate the list of arguments from the body of the function, which will only be indented one level.
+
+Most editors automatically line up any additional lines of arguments to match the indentation you have established on the first line:
+
+def function_name(
+        parameter_0, parameter_1, parameter_2,
+        parameter_3, parameter_4, parameter_5):
+    function body...
+```
+
+- If your program or module has more than one function, you can separate each by two blank lines to make it easier to see where one function ends and the next one begins.
+
+- All import statements should be written at the beginning of a file. The only exception is if you use comments at the beginning of your file to describe the overall program.
+
+```python
+import module_name
+from module_name import function_name
+from module_name import function_name as fn
+import module_name as mn
+from module_name import *
+```
+
+```python
+# printing_functions.py
+"""Functions related to printing 3d models."""
+
+def print_models(unprinted_designs, completed_models):
+    """
+    Simulate printing each design, until there are none left.
+    Move each design to completed_models after printing.
+    """
+    while unprinted_designs:
+        current_design = unprinted_designs.pop()
+
+        # Simulate creating a 3d print from the design.
+        print(f"Printing model: {current_design}")
+        completed_models.append(current_design)
+
+def show_completed_models(completed_models):
+    """Show all the models that were printed."""
+    print("\nThe following models have been printed:")
+    for completed_model in completed_models:
+        print(completed_model)
+
+
+#printing_models.py:
+
+printing_models.py
+import printing_functions as pf
+
+unprinted_designs = ['iphone case', 'robot pendant', 'dodecahedron']
+completed_models = []
+
+pf.print_models(unprinted_designs, completed_models)
+pf.show_completed_models(completed_models)
+
+```
+
+## Summary
+
+```
+In this chapter, you learned how to write functions and to pass arguments so that your functions have access to the information they need to do their work. You learned how to use positional and keyword arguments, and also how to accept an arbitrary number of arguments. You saw functions that display output and functions that return values. You learned how to use functions with lists, dictionaries, if statements, and while loops. You also saw how to store your functions in separate files called modules, so your program files will be simpler and easier to understand. Finally, you learned to style your functions so your programs will continue to be well-structured and as easy as possible for you and others to read.
+
+One of your goals as a programmer should be to write simple code that does what you want it to, and functions help you do this. They allow you to write blocks of code and leave them alone once you know they work. When you know a function does its job correctly, you can trust that it will continue to work and move on to your next coding task.
+
+Functions allow you to write code once and then reuse that code as many times as you want. When you need to run the code in a function, all you need to do is write a one-line call and the function does its job. When you need to modify a function’s behavior, you only have to modify one block of code, and your change takes effect everywhere you’ve made a call to that function.
+
+Using functions makes your programs easier to read, and good function names summarize what each part of a program does. Reading a series of function calls gives you a much quicker sense of what a program does than reading a long series of code blocks.
+
+Functions also make your code easier to test and debug. When the bulk of your program’s work is done by a set of functions, each of which has a specific job, it’s much easier to test and maintain the code you’ve written. You can write a separate program that calls each function and tests whether each function works in all the situations it may encounter. When you do this, you can be confident that your functions will work properly each time you call them.
+```
+
+| Method                     | Syntax                         | How you use it          | When to use                            | Verdict     |
+| -------------------------- | ------------------------------ | ----------------------- | -------------------------------------- | ----------- |
+| Import module              | `import module`                | `module.func()`         | Default, best practice, large projects | ✅ BEST     |
+| Import with alias          | `import module as m`           | `m.func()`              | Shorten long names                     | ✅ GOOD     |
+| Import specific            | `from module import func`      | `func()`                | Small scripts, few functions           | ✅ OK       |
+| Import specific with alias | `from module import func as f` | `f()`                   | Avoid name conflicts                   | ✅ GOOD     |
+| Import everything          | `from module import *`         | `func()`                | Never (except quick testing)           | ❌ AVOID    |
+| Import submodule           | `import package.module`        | `package.module.func()` | Working with packages                  | ✅ GOOD     |
+| Relative import            | `from .module import func`     | `func()`                | Inside your own packages               | ✅ ADVANCED |
+
+Here’s a **clean table summary of the styling rules** (PEP 8 + your book section):
+
+---
+
+## 🧠 Python Function Styling Rules — Table
+
+| Rule                   | What it means               | Example                   | Why it matters                 |
+| ---------------------- | --------------------------- | ------------------------- | ------------------------------ |
+| Function names         | lowercase + underscores     | `def make_car():`         | Readable, standard             |
+| Module names           | lowercase + underscores     | `printing_functions.py`   | Consistency                    |
+| Descriptive names      | Name reflects purpose       | `calculate_total_price()` | Self-explanatory code          |
+| Docstring required     | Comment right after `def`   | `"""Create a car dict"""` | Others can use function easily |
+| Default params spacing | No spaces around `=`        | `x=10`                    | PEP 8 consistency              |
+| Keyword args spacing   | No spaces around `=`        | `func(a=1)`               | Clean syntax                   |
+| Line length            | Max ~79–80 chars            | (use ruler)               | Readability                    |
+| Long parameter lists   | Break into multiple lines   | see below                 | Avoid long lines               |
+| Indentation in params  | Align parameters cleanly    | see below                 | Readable structure             |
+| Multiple functions     | Separate with 2 blank lines | ⬜⬜ between functions    | Visual clarity                 |
+| Imports location       | Top of file                 | `import module`           | Standard structure             |
+
+---
+
+## 🔹 Example: long function definition
+
+```python
+def function_name(
+        parameter_0, parameter_1, parameter_2,
+        parameter_3, parameter_4):
+    """Short description of function."""
+    pass
+```
+
+---
+
+## 🔥 Clean example (fully styled)
+
+```python
+import printing_functions
+
+
+def make_car(manufacturer, model, color='black'):
+    """Create a dictionary describing a car."""
+    return {
+        'manufacturer': manufacturer,
+        'model': model,
+        'color': color,
+    }
+
+
+def print_car(car):
+    """Print car details."""
+    print(car)
+```
+
+---
+
+## ⚡ Quick checklist (mental)
+
+Before finishing code, ask:
+
+- ✔ names readable?
+- ✔ docstring present?
+- ✔ no weird spacing (`=`)?
+- ✔ lines not too long?
+- ✔ imports at top?
+- ✔ functions separated?
+
+---
+
+## 🔥 One-line takeaway
+
+> Write code so others understand it **without reading the implementation**
+
+---

@@ -1,9 +1,29 @@
+#
+# BETTER
 def make_album(artist, title, songs=None):
+    album = {"artist": artist, "title": title}
     if songs:
-        return {"artist": artist.title(), "title": title.title(), "songs": songs}
+        album["songs"] = songs
+    return album
 
-    return {"artist": artist.title(), "title": title.title()}
 
+albums = []
 
-print(make_album("Arabas", "Carabas_Albumb", 5))
-print(make_album("Arabas", "Carabas_Albumb"))
+while True:
+    artist = input("Artist (or 'quit' to exit): ")
+    if artist == "quit":
+        break
+
+    title = input("Album title: ")
+    if title == "quit":
+        break
+
+    songs = input("Number of songs (optional): ")
+
+    if songs:
+        album = make_album(artist, title, int(songs))
+    else:
+        album = make_album(artist, title)
+
+    print(album)
+    albums.append(album)
