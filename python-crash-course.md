@@ -5080,3 +5080,731 @@ def count_words(path):
 - A little experience will help you know where to include exception-handling blocks in your program and how much to report to users about errors that arise.
 
 ## EXERCISE
+
+```python
+try:
+    # 1. Input and conversion
+    number_1 = int(input("Give first number: "))
+    number_2 = int(input("Give second number: "))
+
+    # 2. Calculation
+    result = number_1 / number_2
+    print(f"The result is: {result}")
+
+except ValueError:
+    # This catches things like 'hello' or '10.5'
+    print("Error: Please enter whole numbers only.")
+
+except ZeroDivisionError:
+    # This catches when the second number is 0
+    print("Error: You cannot divide by zero!")
+
+except Exception as e:
+    # Optional: Catch any other unexpected errors
+    print(f"An unexpected error occurred: {e}")
+```
+
+```python
+while True:
+    try:
+        # Get inputs
+        number_1 = int(input("\nGive first number (or '0' to exit): "))
+        number_2 = int(input("Give second number: "))
+
+        # Attempt calculation
+        result = number_1 / number_2
+
+    except ValueError:
+        print("--> Error: Please enter whole numbers only.")
+        continue # Restarts the loop
+
+    except ZeroDivisionError:
+        print("--> Error: You cannot divide by zero.")
+        continue # Restarts the loop
+
+    else:
+        # This block runs ONLY if the try block succeeded
+        print(f"The result is: {result}")
+        break # Exit the loop successfully
+```
+
+## PROBLEM WITH MY CODE !!!!
+
+```python
+from pathlib import Path
+
+cats_path = Path("cats.txt")
+dogs_path = Path("dogs.txt")
+
+files = [cats_path, dogs_path]
+
+for file in files:
+
+    try:
+        file = file.read_text()
+        for line in file.splitlines():
+            print(line)
+    except FileNotFoundError:
+        # print(f"The file {file} is missing.")
+        pass
+```
+
+- By assigning the content of the file to the variable name file, you overwrite the Path object. If a FileNotFoundError occurs, the variable file might not refer to what you think it does, or your error message (if you uncomment it) might try to print the entire contents of a previous file instead of the missing filename.
+
+- Instead of reading the whole text and splitting it (which can be memory-intensive for huge files), you can use open() within pathlib to read line-by-line.
+
+```python
+from pathlib import Path
+
+files = [Path("cats.txt"), Path("dogs.txt")]
+
+for file_path in files:
+    try:
+        # Use .open() to read line by line efficiently
+        with file_path.open(encoding='utf-8') as f:
+            print(f"\n--- Contents of {file_path.name} ---")
+            for line in f:
+                print(line.strip())
+
+    except FileNotFoundError:
+        # Using 'pass' is fine for "silent" failures as per exercise 10-9
+        pass
+```
+
+## ANOTHER PROBLEM
+
+```python
+from pathlib import Path
+
+path = Path("alice.txt")
+
+try:
+    contents = path.read_text()
+    amount = 0
+    for line in contents.splitlines():
+        amount += line.lower().count("the ")
+    print(f"'the' appears {amount} times")
+
+except FileNotFoundError:
+    print(f"The file {path} not found")
+
+```
+
+- better solution for efficiency: just use count()!
+
+```python
+from pathlib import Path
+
+path = Path("alice.txt")
+
+try:
+    contents = path.read_text(encoding='utf-8')
+
+    # Split into individual words
+    words = contents.lower().split()
+
+    # Use count() on the list to find exact matches only
+    amount = words.count('the')
+
+    print(f"The word 'the' appears {amount} times.")
+
+except FileNotFoundError:
+    print(f"The file {path} was not found.")
+
+```
+
+- better?
+
+```python
+from pathlib import Path
+
+path = Path("alice.txt")
+
+try:
+    contents = path.read_text()
+
+    count = contents.lower().count("the ")
+    print(f"'the' appears {count} times")
+
+    # print(f"'the' appears {len(contents.lower().count("the "))} times")
+
+except FileNotFoundError:
+    print(f"The file {path} not found")
+
+```
+
+- idk which is better...
+
+```python
+from pathlib import Path
+
+path = Path("alice.txt")
+
+try:
+    # Adding encoding='utf-8' is a great habit for reading books/files
+    contents = path.read_text(encoding='utf-8')
+
+    # 1. Lowercase everything
+    # 2. Split into a list of individual words
+    words = contents.lower().split()
+
+    # 3. Count exact matches in that list
+    count = words.count("the")
+
+    print(f"The word 'the' appears {count} times.")
+
+except FileNotFoundError:
+    print(f"The file {path} was not found.")
+
+```
+
+## STORING DATA (json module)
+
+- you’ll store the information users provide in data structures such as lists and dictionaries.
+
+- The json module allows you to convert simple Python data structures into JSON-formatted strings, and then load the data from that file the next time the program runs.
+
+- You can also use json to share data between different Python programs. Even better, the JSON data format is not specific to Python, so you can share data you store in the JSON format with people who work in many other programming languages. It’s a useful and portable format, and it’s easy to learn.
+
+- The JSON (JavaScript Object Notation) format was originally developed for JavaScript. However, it has since become a common format used by many languages, including Python.
+
+```python
+# store set of numbers
+# The json.dumps() function takes one argument: a piece of data that should be converted to the JSON format.
+# The function returns a string, which we can then write to a data file
+json.dumps()
+# read
+json.loads()
+```
+
+```python
+from pathlib import Path
+import json
+
+numbers = [2, 3, 5, 7, 11, 13]
+
+path = Path("numbers.json")
+contents = json.dumps(numbers)
+path.write_text(contents)
+# [2, 3, 5, 7, 11, 13]
+```
+
+```python
+from pathlib import Path
+import json
+
+path = Path("numbers.json")
+contents = path.read_text()
+# This function takes in a JSON-formatted string and returns a Python object (in this case, a list), which we assign to numbers
+numbers = json.loads(contents)
+
+print(numbers)
+
+```
+
+- saving and reading user-generated data
+
+```python
+from pathlib import Path
+import json
+
+username = input("What is your name? ")
+
+path = Path("username.json")
+contents = json.dumps(username)
+path.write_text(contents)
+
+print(f"We'll remember you when you come back, {username}!")
+```
+
+```python
+from pathlib import Path
+import json
+
+path = Path("username.json")
+contents = path.read_text()
+username = json.loads(contents)
+
+print(f"Welcome back, {username}!")
+
+```
+
+- combined
+
+```python
+from pathlib import Path
+import json
+
+path = Path("username.json")
+if path.exists():
+    contents = path.read_text()
+    username = json.loads(contents)
+    print(f"Welcome back, {username}!")
+else:
+    username = input("What is your name? ")
+    contents = json.dumps(username)
+    path.write_text(contents)
+    print(f"We'll remember you when you come back, {username}!")
+```
+
+### Refactoring
+
+- Often, you’ll come to a point where your code will work, but you’ll recognize that you could improve the code by breaking it up into a series of functions that have specific jobs.
+- This process is called refactoring. Refactoring makes your code cleaner, easier to understand, and easier to extend.
+
+* . This file is a little cleaner, but the function greet_user() is doing more than just greeting the user—it’s also retrieving a stored username if one exists and prompting for a new username if one doesn’t.
+
+```python
+from pathlib import Path
+import json
+
+def greet_user():
+❶     """Greet the user by name."""
+    path = Path('username.json')
+    if path.exists():
+        contents = path.read_text()
+        username = json.loads(contents)
+        print(f"Welcome back, {username}!")
+    else:
+        username = input("What is your name? ")
+        contents = json.dumps(username)
+        path.write_text(contents)
+        print(f"We'll remember you when you come back, {username}!")
+
+greet_user()
+
+
+
+```
+
+- Let’s refactor greet_user() so it’s not doing so many different tasks. We’ll start by moving the code for retrieving a stored username to a separate function:
+
+```python
+from pathlib import Path
+import json
+
+def get_stored_username(path):
+❶     """Get stored username if available."""
+    if path.exists():
+        contents = path.read_text()
+        username = json.loads(contents)
+        return username
+    else:
+❷         return None
+
+def greet_user():
+    """Greet the user by name."""
+    path = Path('username.json')
+    username = get_stored_username(path)
+❸     if username:
+        print(f"Welcome back, {username}!")
+    else:
+        username = input("What is your name? ")
+        contents = json.dumps(username)
+        path.write_text(contents)
+        print(f"We'll remember you when you come back, {username}!")
+
+greet_user()
+```
+
+- We should factor one more block of code out of greet_user(). If the username doesn’t exist, we should move the code that prompts for a new username to a function dedicated to that purpose:
+
+```python
+from pathlib import Path
+import json
+
+def get_stored_username(path):
+    """Get stored username if available."""
+    --snip--
+
+def get_new_username(path):
+    """Prompt for a new username."""
+    username = input("What is your name? ")
+    contents = json.dumps(username)
+    path.write_text(contents)
+    return username
+
+def greet_user():
+    """Greet the user by name."""
+    path = Path('username.json')
+❶     username = get_stored_username(path)
+    if username:
+        print(f"Welcome back, {username}!")
+    else:
+❷         username = get_new_username(path)
+        print(f"We'll remember you when you come back, {username}!")
+
+greet_user()
+
+```
+
+## Exercise
+
+```
+Try It Yourself
+10-11. Favorite Number: Write a program that prompts for the user’s favorite number. Use json.dumps() to store this number in a file. Write a separate program that reads in this value and prints the message “I know your favorite number! It’s _____.”
+
+10-12. Favorite Number Remembered: Combine the two programs you wrote in Exercise 10-11 into one file. If the number is already stored, report the favorite number to the user. If not, prompt for the user’s favorite number and store it in a file. Run the program twice to see that it works.
+
+10-13. User Dictionary: The remember_me.py example only stores one piece of information, the username. Expand this example by asking for two more pieces of information about the user, then store all the information you collect in a dictionary. Write this dictionary to a file using json.dumps(), and read it back in using json.loads(). Print a summary showing exactly what your program remembers about the user.
+
+10-14. Verify User: The final listing for remember_me.py assumes either that the user has already entered their username or that the program is running for the first time. We should modify it in case the current user is not the person who last used the program.
+
+Before printing a welcome back message in greet_user(), ask the user if this is the correct username. If it’s not, call get_new_username() to get the correct username.
+
+```
+
+```python
+import json
+from pathlib import Path
+
+# 1. Setup the path once at the top
+path = Path("number.json")
+
+while True:
+    try:
+        # 2. Get the input and force it to be an integer
+        number = int(input("What is your favorite number? "))
+    except ValueError:
+        # 3. Handle text-entry errors
+        print("That's not a number! Please try again.")
+    else:
+        # 4. If input is valid, save it and exit the loop
+        contents = json.dumps(number)
+        path.write_text(contents)
+        print(f"Got it! I've saved {number} to {path}.")
+        break
+```
+
+```python
+import json
+from pathlib import Path
+
+path = Path("number.json")
+
+try:
+    # 1. Attempt to read the file
+    contents = path.read_text()
+except FileNotFoundError:
+    # 2. Handle the case where the file hasn't been created yet
+    print(f"Sorry, I couldn't find {path}. Run the writer program first!")
+else:
+    # 3. Convert JSON string back to a Python integer
+    number = json.loads(contents)
+    print(f"I know your favorite number! It's {number}.")
+
+```
+
+```python
+import json
+from pathlib import Path
+
+path = Path("number.json")
+
+if path.exists():
+    # If it exists, just read and show it
+    contents = path.read_text()
+    number = json.loads(contents)
+    print(f"I remember! Your favorite number is {number}.")
+else:
+    # If it doesn't exist, we need to get it (the risky part)
+    try:
+        number = int(input("I don't know your favorite number. What is it? "))
+    except ValueError:
+        print("Sorry, I need an actual number (digits), not text.")
+    else:
+        # This only runs if the input was a valid integer
+        contents = json.dumps(number)
+        path.write_text(contents)
+        print(f"Thanks! I'll remember {number} for next time.")
+
+```
+
+- my solution
+
+```python
+import json
+from pathlib import Path
+
+
+path = Path("number.json")
+
+
+def greet_user(contents):
+    user_info = json.loads(contents)
+    print(f"Welcome Back, {user_info['name']}")
+
+
+def register_new_user():
+    name = input("Give me a name: ")
+    number = int(input("Give me a number: "))
+    age = int(input("Give me a your age: "))
+
+    user_info = {"name": name, "number": number, "age": age}
+
+    contents = json.dumps(user_info)
+    path.write_text(contents)
+    print(f"A user with the following info {contents} has been written to a file!")
+
+
+try:
+    if path.exists():
+
+        contents = path.read_text()
+        username = json.loads(contents)["name"]
+
+        verification = input(f"Is your name {username} (y/n)? ")
+        if verification.lower() == "n":
+            register_new_user()
+        else:
+            greet_user(contents)
+
+    else:
+        register_new_user()
+
+
+except ValueError:
+    print("Please, provide a number, not a string!")
+
+```
+
+- gpt solution
+
+```python
+
+import json
+from pathlib import Path
+
+path = Path("number.json")
+
+def greet_user(user_info):
+    """Greets the user using the dictionary already loaded."""
+    print(f"Welcome Back, {user_info['name']}!")
+    print(f"I remember your favorite number is {user_info['number']}.")
+
+def register_new_user():
+    """Prompts for data and saves it to the path."""
+    try:
+        name = input("Give me a name: ")
+        number = int(input("Give me a number: "))
+        age = int(input("Give me your age: "))
+
+        user_info = {"name": name, "number": number, "age": age}
+        path.write_text(json.dumps(user_info))
+        print(f"Registration complete for {name}!")
+    except ValueError:
+        print("Error: Age and Number must be numerical.")
+
+# --- Main Logic ---
+if path.exists():
+    contents = path.read_text()
+    user_info = json.loads(contents) # Load it ONCE here
+
+    verify = input(f"Are you {user_info['name']}? (y/n): ").lower()
+
+    if verify == 'y':
+        greet_user(user_info) # Pass the dictionary directly
+    else:
+        register_new_user()
+else:
+    register_new_user()
+```
+
+## SUMMARY CHAPTER 10
+
+In this chapter, you learned how to work with files.
+
+You learned to read the entire contents of a file, and then work through the contents one line at a time if you need to.
+
+You learned to write as much text as you want to a file.
+
+You also read about exceptions and how to handle the exceptions you’re likely to see in your programs.
+
+Finally, you learned how to store Python data structures so you can save information your users provide, preventing them from having to start over each time they run a program.
+
+In Chapter 11, you’ll learn efficient ways to test your code. This will help you trust that the code you develop is correct, and it will help you identify bugs that are introduced as you continue to build on the programs you’ve written.
+
+- STRANGE ELSE HERE. WHY?
+
+```python
+try:
+    x = input("Give me a number: ")
+    x = int(x)
+
+    y = input("Give me another number: ")
+    y = int(y)
+except ValueError:
+    print("Sorry, I really needed a number.")
+else:
+    sum = x + y
+    print(f"The sum of {x} and {y} is {sum}.")
+
+```
+
+```python
+print("Enter 'q' at any time to quit.\n")
+
+while True:
+    try:
+        x = input("\nGive me a number: ")
+        if x == 'q':
+            break
+
+        x = int(x)
+
+        y = input("Give me another number: ")
+        if y == 'q':
+            break
+
+        y = int(y)
+
+    except ValueError:
+        print("Sorry, I really needed a number.")
+
+    else:
+        sum = x + y
+        print(f"The sum of {x} and {y} is {sum}.")
+
+```
+
+```python
+from pathlib import Path
+
+filenames = ['cats.txt', 'dogs.txt']
+
+for filename in filenames:
+    print(f"\nReading file: {filename}")
+
+    path = Path(filename)
+    try:
+        contents = path.read_text()
+    except FileNotFoundError:
+        print("  Sorry, I can't find that file.")
+        # pass
+    else:
+        print(contents)
+```
+
+```python
+from pathlib import Path
+
+def count_common_words(filename, word):
+    """Count how many times word appears in the text."""
+    # Note: This is a really simple approximation, and the number returned
+    #   will be higher than the actual count.
+    path = Path(filename)
+    try:
+        contents = path.read_text()
+    except FileNotFoundError:
+        pass
+    else:
+        word_count = contents.lower().count(word)
+        msg = f"'{word}' appears in {filename} about {word_count} times."
+        print(msg)
+
+filename = 'alice.txt'
+count_common_words(filename, 'the')
+
+```
+
+```python
+user_dictionary.py
+from pathlib import Path
+import json
+
+def get_stored_user_info(path):
+    """Get stored user info if available."""
+    if path.exists():
+        contents = path.read_text()
+        user_dict = json.loads(contents)
+        return user_dict
+    else:
+        return None
+
+def get_new_user_info(path):
+    """Get information from a new user."""
+    username = input("What is your name? ")
+    game = input("What's your favorite game? ")
+    animal = input("What's your favorite animal? ")
+
+    user_dict = {
+        'username': username,
+        'game': game,
+        'animal': animal,
+    }
+
+    contents = json.dumps(user_dict)
+    path.write_text(contents)
+    return user_dict
+
+def greet_user():
+    """Greet the user by name, and state what we know about them."""
+    path = Path('user_info.json')
+    user_dict = get_stored_user_info(path)
+    if user_dict:
+        print(f"Welcome back, {user_dict['username']}!")
+        print(f"Hope you've been playing some {user_dict['game']}. ")
+        print(f"Have you seen a {user_dict['animal']} recently?")
+    else:
+        user_dict = get_new_user_info(path)
+        msg = f"We'll remember you when you return, {user_dict['username']}!"
+        print(msg)
+
+greet_user()
+
+```
+
+```python
+from pathlib import Path
+import json
+
+def get_stored_username(path):
+    """Get stored username if available."""
+    if path.exists():
+        contents = path.read_text()
+        username = json.loads(contents)
+        return username
+    else:
+        return None
+
+def get_new_username(path):
+    """Prompt for a new username."""
+    username = input("What is your name? ")
+    contents = json.dumps(username)
+    path.write_text(contents)
+    return username
+
+def greet_user():
+    """Greet the user by name."""
+    path = Path('username.json')
+    username = get_stored_username(path)
+    if username:
+        correct = input(f"Are you {username}? (y/n) ")
+        if correct == 'y':
+            print(f"Welcome back, {username}!")
+        else:
+            username = get_new_username(path)
+            print(f"We'll remember you when you come back, {username}!")
+    else:
+        username = get_new_username(path)
+        print(f"We'll remember you when you come back, {username}!")
+
+greet_user()
+
+
+# cleaner version
+def greet_user():
+    """Greet the user by name."""
+    path = Path('username.json')
+    username = get_stored_username(path)
+    if username:
+        correct = input(f"Are you {username}? (y/n) ")
+        if correct == 'y':
+            print(f"Welcome back, {username}!")
+            return
+
+    # We got a username, but it's not correct.
+    #   Prompt for a new username.
+    username = get_new_username(path)
+    print(f"We'll remember you when you come back, {username}!")
+```
