@@ -1,0 +1,21 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Python packaging
+*.egg-info/
+dist/
+build/
+
+# Environment variables (later useful)
+.env
+
+# IDEs / editors
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db

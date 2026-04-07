@@ -5808,3 +5808,691 @@ def greet_user():
     username = get_new_username(path)
     print(f"We'll remember you when you come back, {username}!")
 ```
+
+# CHAPTER 11 - TESTING YOUR CODE
+
+- Testing proves that your code works as it’s supposed to in response to all the kinds of input it’s designed to receive.
+
+- You’ll also be able to test new code as you add it, to make sure your changes don’t break your program’s existing behavior
+
+- The pytest library is a collection of tools that will help you write your first tests quickly and simply, while supporting your tests as they grow in complexity along with your projects
+
+- A third-party package is a library that’s developed outside the core Python language.
+
+```python
+$ python -m pip install --upgrade pip
+❶ Requirement already satisfied: pip in /.../python3.11/site-packages (22.0.4)
+--snip--
+❷ Successfully installed pip-22.1.2
+```
+
+```python
+python -m pip install --upgrade package_name
+```
+
+- GPT
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+
+
+pipx install <appname>
+sudo apt install python3-xyz
+```
+
+## GPT SOLUTION
+
+You’ve run into a **modern Linux / Debian (including Ubuntu, etc.) behavior change**—and the book you’re using is slightly outdated for that setup.
+
+Let’s cut through the confusion and give you the **correct way to proceed** 👇
+
+---
+
+## 🚫 Why your book instructions fail
+
+The book says:
+
+```bash
+python -m pip install --upgrade pip
+```
+
+But your system Python is **externally managed (PEP 668)**, so:
+
+- ❌ You cannot upgrade pip globally
+- ❌ You cannot install packages with `--user` either (often blocked too)
+
+👉 This is intentional: your OS wants to protect itself.
+
+---
+
+## ✅ The correct modern workflow (use this for your course)
+
+### 🔹 Step 1 — Create a virtual environment
+
+```bash
+python3 -m venv venv
+```
+
+If this fails:
+
+```bash
+sudo apt install python3-venv python3-full
+```
+
+---
+
+### 🔹 Step 2 — Activate it
+
+```bash
+source venv/bin/activate
+```
+
+Now your terminal should show something like:
+
+```
+(venv) user@machine:~$
+```
+
+---
+
+### 🔹 Step 3 — Now update pip (THIS will work)
+
+```bash
+python -m pip install --upgrade pip
+```
+
+✔️ This works because you're no longer touching the system Python.
+
+---
+
+### 🔹 Step 4 — Install packages (pytest etc.)
+
+```bash
+pip install pytest
+```
+
+✔️ No `--user` needed
+✔️ No errors
+✔️ Clean environment
+
+---
+
+## 🧠 Key mindset shift (important for you as a dev)
+
+Your book assumes:
+
+> “Install everything globally”
+
+Modern Python says:
+
+> “Never touch system Python. Always use virtual environments.”
+
+This is actually **what real developers do** (especially in backend / full-stack roles you’re targeting).
+
+---
+
+## 🔥 Recommended workflow for your Python Crash Course
+
+For every project/chapter:
+
+```bash
+mkdir python-crash-course
+cd python-crash-course
+
+python3 -m venv venv
+source venv/bin/activate
+
+pip install --upgrade pip
+```
+
+Then install whatever the chapter needs.
+
+---
+
+## ⚠️ What NOT to do
+
+Avoid this:
+
+```bash
+python3 -m pip install --break-system-packages
+```
+
+👉 It works, but:
+
+- can break your OS Python
+- causes weird bugs later
+- bad practice for professional development
+
+---
+
+## 🧩 Why `pip` sometimes “works” anyway
+
+Earlier you noticed:
+
+> “but pip / pip3 works?”
+
+That’s usually because:
+
+- it might point to a **different Python install**
+- or just hasn’t tried installing anything yet
+
+👉 Don’t rely on that — it’s inconsistent.
+
+---
+
+## 🚀 Bottom line (what you should do)
+
+Forget the book’s global install approach.
+
+👉 Use this every time:
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install <package>
+```
+
+---
+
+If you want, I can help you set up a **clean Python + JS workflow** aligned with your HEMS thesis + job goal (so Python doesn’t distract but still helps you).
+
+```python
+mkdir python-crash-course
+cd python-crash-course
+
+python3 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+```
+
+```python
+$ python -m pip install --user pytest
+Collecting pytest
+  --snip--
+Successfully installed attrs-21.4.0 iniconfig-1.1.1 ...pytest-7.x.x
+
+```
+
+- for me
+
+```python
+python -m pip install pytest
+```
+
+## Testing a Function
+
+```python
+# name_function.py
+def get_formatted_name(first, last):
+    """Generate a neatly formatted full name."""
+    full_name = f"{first} {last}"
+    return full_name.title()
+```
+
+```python
+# names.py
+from name_function import get_formatted_name
+
+print("Enter 'q' at any time to quit.")
+while True:
+    first = input("\nPlease give me a first name: ")
+    if first == 'q':
+        break
+    last = input("Please give me a last name: ")
+    if last == 'q':
+        break
+
+    formatted_name = get_formatted_name(first, last)
+    print(f"\tNeatly formatted name: {formatted_name}.")
+```
+
+- pytest provides an efficient way to automate the testing of a function’s output.
+
+- A unit test verifies that one specific aspect of a function’s behavior is correct.
+- A test case is a collection of unit tests that together prove that a function behaves as it’s supposed to, within the full range of situations you expect it to handle.
+
+- A good test case considers all the possible kinds of input a function could receive and includes tests to represent each of these situations.
+
+- A test case with full coverage includes a full range of unit tests covering all the possible ways you can use a function.
+
+```python
+# test_name_function.py
+from name_function import get_formatted_name
+
+
+def test_first_last_name():
+    """Do names like 'Janis Joplin' work?"""
+    formatted_name = get_formatted_name("janis", "joplin")
+    assert formatted_name == "Janis Joplin"
+
+```
+
+- When we ask pytest to run the tests we’ve written, it will look for any file that begins with test\_, and run all of the tests it finds in that file.
+
+```python
+$ pytest
+========================= test session starts =========================
+❶ platform darwin -- Python 3.x.x, pytest-7.x.x, pluggy-1.x.x
+❷ rootdir: /.../python_work/chapter_11
+❸ collected 1 item
+
+❹ test_name_function.py .                                          [100%]
+========================== 1 passed in 0.00s ==========================
+
+```
+
+- failing test
+
+```python
+def get_formatted_name(first, middle, last):
+    """Generate a neatly formatted full name."""
+    full_name = f"{first} {middle} {last}"
+    return full_name.title()
+
+```
+
+```python
+$ pytest
+========================= test session starts =========================
+--snip--
+❶ test_name_function.py F                                          [100%]
+❷ ============================== FAILURES ===============================
+❸ ________________________ test_first_last_name _________________________
+    def test_first_last_name():
+        """Do names like 'Janis Joplin' work?"""
+❹ >       formatted_name = get_formatted_name('janis', 'joplin')
+❺ E       TypeError: get_formatted_name() missing 1 required positional
+            argument: 'last'
+
+test_name_function.py:5: TypeError
+======================= short test summary info =======================
+FAILED test_name_function.py::test_first_last_name - TypeError:
+    get_formatted_name() missing 1 required positional argument: 'last'
+========================== 1 failed in 0.04s ==========================
+```
+
+- let's fix the code, not the test
+
+```python
+def get_formatted_name(first, last, middle=''):
+    """Generate a neatly formatted full name."""
+    if middle:
+        full_name = f"{first} {middle} {last}"
+    else:
+        full_name = f"{first} {last}"
+    return full_name.title()
+```
+
+- adding another test
+
+```python
+def test_first_last_middle_name():
+    """Do names like 'Wolfgang Amadeus Mozart' work?"""
+    formatted_name = get_formatted_name("wolfgang", "mozart", "amadeus")
+    assert formatted_name == "Wolfgang Amadeus Mozart"
+```
+
+## Exercise
+
+```
+Try It Yourself
+11-1. City, Country: Write a function that accepts two parameters: a city name and a country name. The function should return a single string of the form City, Country, such as Santiago, Chile. Store the function in a module called city_functions.py, and save this file in a new folder so pytest won’t try to run the tests we’ve already written.
+
+Create a file called test_cities.py that tests the function you just wrote. Write a function called test_city_country() to verify that calling your function with values such as 'santiago' and 'chile' results in the correct string. Run the test, and make sure test_city_country() passes.
+
+11-2. Population: Modify your function so it requires a third parameter, population. It should now return a single string of the form City, Country – population xxx, such as Santiago, Chile – population 5000000. Run the test again, and make sure test_city_country() fails this time.
+
+Modify the function so the population parameter is optional. Run the test, and make sure test_city_country() passes again.
+
+Write a second test called test_city_country_population() that verifies you can call your function with the values 'santiago', 'chile', and 'population=5000000'. Run the tests one more time, and make sure this new test passes.
+```
+
+## COMMON TEST CASES
+
+### Table 11-1: Commonly Used Assertion Statements in Tests
+
+| Assertion                    | Claim                                    |
+| ---------------------------- | ---------------------------------------- |
+| `assert a == b`              | Assert that two values are equal.        |
+| `assert a != b`              | Assert that two values are not equal.    |
+| `assert a`                   | Assert that `a` evaluates to True.       |
+| `assert not a`               | Assert that `a` evaluates to False.      |
+| `assert element in list`     | Assert that an element is in a list.     |
+| `assert element not in list` | Assert that an element is not in a list. |
+
+---
+
+### Common Assertion Statements for Python, FastAPI, and Streamlit Testing
+
+| Assertion                       | Typical use                     | Example                                                 |
+| ------------------------------- | ------------------------------- | ------------------------------------------------------- |
+| `assert a == b`                 | Check exact equality            | `assert response.status_code == 200`                    |
+| `assert a != b`                 | Check values differ             | `assert data["status"] != "error"`                      |
+| `assert a`                      | Check truthy value              | `assert response.ok`                                    |
+| `assert not a`                  | Check falsy value               | `assert not errors`                                     |
+| `assert x is None`              | Check missing value             | `assert result is None`                                 |
+| `assert x is not None`          | Check value exists              | `assert user is not None`                               |
+| `assert x is True`              | Check exact boolean `True`      | `assert payload["success"] is True`                     |
+| `assert x is False`             | Check exact boolean `False`     | `assert payload["cached"] is False`                     |
+| `assert item in collection`     | Check membership                | `assert "email" in response.json()`                     |
+| `assert item not in collection` | Check absence                   | `assert "password" not in response.json()`              |
+| `assert key in dict`            | Check JSON field exists         | `assert "id" in data`                                   |
+| `assert key not in dict`        | Check field is omitted          | `assert "traceback" not in data`                        |
+| `assert len(x) == n`            | Check collection size           | `assert len(data["items"]) == 3`                        |
+| `assert len(x) > 0`             | Check collection is not empty   | `assert len(users) > 0`                                 |
+| `assert isinstance(x, T)`       | Check type                      | `assert isinstance(data, dict)`                         |
+| `assert all(...)`               | Check all items satisfy a rule  | `assert all("id" in item for item in items)`            |
+| `assert any(...)`               | Check at least one item matches | `assert any(user["role"] == "admin" for user in users)` |
+| `assert text in string`         | Check message/content           | `assert "Welcome" in page_text`                         |
+| `assert text not in string`     | Check sensitive text absent     | `assert "Internal Server Error" not in response.text`   |
+| `assert x > y`                  | Check numeric threshold         | `assert response_time_ms > 0`                           |
+| `assert x < y`                  | Check upper bound               | `assert response.elapsed.total_seconds() < 1`           |
+| `assert x >= y`                 | Check minimum acceptable value  | `assert progress >= 0`                                  |
+| `assert x <= y`                 | Check maximum acceptable value  | `assert score <= 100`                                   |
+
+### Common API Assertions (FastAPI)
+
+| Assertion                                                                | Typical use                 | Example                                                                  |
+| ------------------------------------------------------------------------ | --------------------------- | ------------------------------------------------------------------------ |
+| `assert response.status_code == 200`                                     | Successful GET request      | `assert response.status_code == 200`                                     |
+| `assert response.status_code == 201`                                     | Resource created            | `assert response.status_code == 201`                                     |
+| `assert response.status_code == 204`                                     | Successful empty response   | `assert response.status_code == 204`                                     |
+| `assert response.status_code == 400`                                     | Bad request validation case | `assert response.status_code == 400`                                     |
+| `assert response.status_code == 401`                                     | Unauthorized request        | `assert response.status_code == 401`                                     |
+| `assert response.status_code == 403`                                     | Forbidden request           | `assert response.status_code == 403`                                     |
+| `assert response.status_code == 404`                                     | Missing route/resource      | `assert response.status_code == 404`                                     |
+| `assert response.status_code == 422`                                     | FastAPI validation error    | `assert response.status_code == 422`                                     |
+| `assert response.headers["content-type"].startswith("application/json")` | JSON response check         | `assert response.headers["content-type"].startswith("application/json")` |
+| `assert response.json()["name"] == "Alice"`                              | Check JSON field value      | `assert response.json()["name"] == "Alice"`                              |
+| `assert "detail" in response.json()`                                     | Check error payload exists  | `assert "detail" in response.json()`                                     |
+
+### Common JSON / Dict Assertions
+
+| Assertion                                   | Typical use           | Example                                     |
+| ------------------------------------------- | --------------------- | ------------------------------------------- |
+| `assert data["id"] == 1`                    | Exact field value     | `assert data["id"] == 1`                    |
+| `assert data.get("email") == "a@b.com"`     | Safe lookup           | `assert data.get("email") == "a@b.com"`     |
+| `assert set(data.keys()) >= {"id", "name"}` | Required keys present | `assert set(data.keys()) >= {"id", "name"}` |
+| `assert data["items"] == []`                | Empty list response   | `assert data["items"] == []`                |
+| `assert isinstance(data["items"], list)`    | Field type check      | `assert isinstance(data["items"], list)`    |
+
+### Common Exception Assertions (`pytest`)
+
+| Assertion                                | Typical use                       | Example                                            |
+| ---------------------------------------- | --------------------------------- | -------------------------------------------------- |
+| `with pytest.raises(ExceptionType): ...` | Check expected exception          | `with pytest.raises(ValueError): parse_age("abc")` |
+| `with pytest.raises(HTTPException): ...` | FastAPI service/unit logic errors | `with pytest.raises(HTTPException): get_user(-1)`  |
+| `assert "message" in str(exc.value)`     | Check exception message           | `assert "invalid input" in str(exc.value)`         |
+
+### Common Streamlit-Oriented Assertions
+
+| Assertion                                  | Typical use               | Example                                    |
+| ------------------------------------------ | ------------------------- | ------------------------------------------ |
+| `assert result_df is not None`             | Data loaded for display   | `assert result_df is not None`             |
+| `assert not result_df.empty`               | DataFrame has rows        | `assert not result_df.empty`               |
+| `assert "total_cost" in result_df.columns` | Expected column exists    | `assert "total_cost" in result_df.columns` |
+| `assert result["chart_data"] is not None`  | Chart input prepared      | `assert result["chart_data"] is not None`  |
+| `assert state["logged_in"] is True`        | Session-state logic works | `assert state["logged_in"] is True`        |
+| `assert filtered_count <= total_count`     | Filter logic works        | `assert filtered_count <= total_count`     |
+
+### Practical Notes
+
+- Use `is None` / `is True` / `is False` for exact identity checks.
+- Use `==` when comparing values.
+- For FastAPI, the most common checks are:
+  - `status_code`
+  - `response.json()`
+  - headers
+  - validation/error payloads
+- For Streamlit, you usually test:
+  - helper functions
+  - data transformation
+  - session-state logic
+  - filtering/sorting results
+  - not the UI rendering itself
+
+---
+
+## CHEATSHEET
+
+### FastAPI / Streamlit Testing Assertions Cheat Sheet
+
+| Assertion                                                                | What it checks            | Example                                                                  |
+| ------------------------------------------------------------------------ | ------------------------- | ------------------------------------------------------------------------ |
+| `assert a == b`                                                          | exact equality            | `assert response.status_code == 200`                                     |
+| `assert a != b`                                                          | not equal                 | `assert data["role"] != "guest"`                                         |
+| `assert a`                                                               | truthy                    | `assert response.ok`                                                     |
+| `assert not a`                                                           | falsy                     | `assert not errors`                                                      |
+| `assert x is None`                                                       | missing value             | `assert result is None`                                                  |
+| `assert x is not None`                                                   | value exists              | `assert user is not None`                                                |
+| `assert key in dict`                                                     | field exists              | `assert "id" in data`                                                    |
+| `assert key not in dict`                                                 | field absent              | `assert "password" not in data`                                          |
+| `assert item in collection`                                              | membership                | `assert "email" in errors`                                               |
+| `assert len(x) == n`                                                     | exact size                | `assert len(items) == 5`                                                 |
+| `assert len(x) > 0`                                                      | non-empty                 | `assert len(rows) > 0`                                                   |
+| `assert isinstance(x, T)`                                                | correct type              | `assert isinstance(data, dict)`                                          |
+| `assert all(...)`                                                        | all items match           | `assert all("id" in item for item in items)`                             |
+| `assert any(...)`                                                        | at least one matches      | `assert any(u["active"] for u in users)`                                 |
+| `assert text in string`                                                  | contains text             | `assert "Welcome" in page_text`                                          |
+| `assert response.status_code == 200`                                     | successful GET            | `assert response.status_code == 200`                                     |
+| `assert response.status_code == 201`                                     | created resource          | `assert response.status_code == 201`                                     |
+| `assert response.status_code == 404`                                     | missing resource          | `assert response.status_code == 404`                                     |
+| `assert response.status_code == 422`                                     | FastAPI validation error  | `assert response.status_code == 422`                                     |
+| `assert response.headers["content-type"].startswith("application/json")` | JSON response             | `assert response.headers["content-type"].startswith("application/json")` |
+| `assert response.json()["name"] == "Alice"`                              | JSON value check          | `assert response.json()["name"] == "Alice"`                              |
+| `with pytest.raises(ValueError): ...`                                    | expected exception        | `with pytest.raises(ValueError): parse_age("abc")`                       |
+| `assert not df.empty`                                                    | DataFrame has data        | `assert not df.empty`                                                    |
+| `assert "col" in df.columns`                                             | expected DataFrame column | `assert "total_cost" in df.columns`                                      |
+
+## TESTING A CLASS
+
+- If you have passing tests for a class you’re working on, you can be confident that improvements you make to the class won’t accidentally break its current behavior.
+
+```python
+# survey.py
+class AnonymousSurvey:
+    """Collect anonymous answers to a survey question."""
+
+    def __init__(self, question):
+        """Store a question, and prepare to store responses."""
+        self.question = question
+        self.responses = []
+
+    def show_question(self):
+        """Show the survey question."""
+        print(self.question)
+
+    def store_response(self, new_response):
+        """Store a single response to the survey."""
+        self.responses.append(new_response)
+
+    def show_results(self):
+        """Show all the responses that have been given."""
+        print("Survey results:")
+        for response in self.responses:
+            print(f"- {response}")
+
+```
+
+```python
+# language_survey.py
+from survey import AnonymousSurvey
+
+# Define a question, and make a survey.
+question = "What language did you first learn to speak?"
+language_survey = AnonymousSurvey(question)
+
+# Show the question, and store responses to the question.
+language_survey.show_question()
+print("Enter 'q' at any time to quit.\n")
+while True:
+    response = input("Language: ")
+    if response == 'q':
+        break
+    language_survey.store_response(response)
+
+# Show the survey results.
+print("\nThank you to everyone who participated in the survey!")
+language_survey.show_results()
+
+```
+
+- This class works for a simple anonymous survey, but say we want to improve AnonymousSurvey and the module it’s in, survey. We could allow each user to enter more than one response, we could write a method to list only unique responses and to report how many times each response was given, or we could even write another class to manage non-anonymous surveys.
+
+- To ensure we don’t break existing behavior as we develop this module, we can write tests for the class.
+
+```python
+# test_survey.py
+from survey import AnonymousSurvey
+
+
+def test_store_single_response():
+    """Test that a single response is stored properly."""
+    question = "What language did you first learn to speak?"
+    language_survey = AnonymousSurvey(question)
+    language_survey.store_response("English")
+    assert "English" in language_survey.responses
+
+
+```
+
+- now we tes more responses
+
+```python
+from survey import AnonymousSurvey
+
+def test_store_single_response():
+    --snip--
+
+def test_store_three_responses():
+    """Test that three individual responses are stored properly."""
+    question = "What language did you first learn to speak?"
+    language_survey = AnonymousSurvey(question)
+❶     responses = ['English', 'Spanish', 'Mandarin']
+    for response in responses:
+        language_survey.store_response(response)
+
+❷     for response in responses:
+        assert response in language_survey.responses
+```
+
+- This works perfectly.
+- However, these tests are a bit repetitive, so we’ll use another feature of pytest to make them more efficient.
+
+## Using FIXTURES
+
+- In test_survey.py, we created a new instance of AnonymousSurvey in each test function.
+- This is fine in the short example we’re working with, but in a real-world project with tens or hundreds of tests, this would be problematic.
+
+- In testing, a fixture helps set up a test environment. Often, this means creating a resource that’s used by more than one test
+
+- We create a fixture in pytest by writing a function with the decorator @pytest.fixture.
+
+* A decorator is a directive placed just before a function definition; &&Python applies this directive to the function before it runs, to alter how the function code behaves.
+
+* Don’t worry if this sounds complicated; you can start to use decorators from third-party packages before learning to write them yourself.
+
+```python
+import pytest
+from survey import AnonymousSurvey
+
+❶ @pytest.fixture
+❷ def language_survey():
+    """A survey that will be available to all test functions."""
+    question = "What language did you first learn to speak?"
+    language_survey = AnonymousSurvey(question)
+    return language_survey
+
+❸ def test_store_single_response(language_survey):
+    """Test that a single response is stored properly."""
+❹     language_survey.store_response('English')
+    assert 'English' in language_survey.responses
+
+❺ def test_store_three_responses(language_survey):
+    """Test that three individual responses are stored properly."""
+    responses = ['English', 'Spanish', 'Mandarin']
+    for response in responses:
+❻         language_survey.store_response(response)
+
+    for response in responses:
+        assert response in language_survey.responses
+```
+
+- These tests would be particularly useful when trying to expand AnonymousSurvey to handle multiple responses for each person.
+
+- After modifying the code to accept multiple responses, you could run these tests and make sure you haven’t affected the ability to store a single response or a series of individual responses.
+
+* When you want to write a fixture, write a function that generates the resource that’s used by multiple test functions.
+
+* Add the @pytest.fixture decorator to the new function, and add the name of this function as a parameter for each test function that uses this resource.
+
+* Your tests will be shorter and easier to write and maintain from that point forward.
+
+## EXERCISE
+
+```
+11-3. Employee: Write a class called Employee. The __init__() method should take in a first name, a last name, and an annual salary, and store each of these as attributes. Write a method called give_raise() that adds $5,000 to the annual salary by default but also accepts a different raise amount.
+
+Write a test file for Employee with two test functions, test_give_default_raise() and test_give_custom_raise(). Write your tests once without using a fixture, and make sure they both pass. Then write a fixture so you don’t have to create a new employee instance in each test function. Run the tests again, and make sure both tests still pass.
+```
+
+```python
+class Employee:
+    """A simple class to represent an employee."""
+
+    def __init__(self, first, last, annual_salary):
+        """Initialize the employee."""
+        self.first = first
+        self.last = last
+        self.annual_salary = annual_salary
+
+    def give_raise(self, amount=5000):
+        """Give the employee a raise."""
+        self.annual_salary += amount
+```
+
+```python
+import pytest
+from employee import Employee
+
+@pytest.fixture
+def employee():
+    """A fixture that provides an Employee instance for tests."""
+    return Employee("Alex", "Arkhipov", 5000)
+
+def test_give_default_raise(employee):
+    """Test the default raise using the fixture."""
+    employee.give_raise()
+    assert employee.annual_salary == 10000
+
+def test_give_custom_raise(employee):
+    """Test the custom raise using the fixture."""
+    employee.give_raise(20000)
+    assert employee.annual_salary == 25000
+```
+
+## SUMMARY CHAPTER 11
+
+In this chapter, you learned to write tests for functions and classes using tools in the pytest module.
+
+You learned to write test functions that verify specific behaviors your functions and classes should exhibit.
+
+You saw how fixtures can be used to efficiently create resources that can be used in multiple test functions in a test file.
+
+Testing is an important topic that many newer programmers aren’t exposed to.
+
+You don’t have to write tests for all the simple projects you try as a new programmer. But as soon as you start to work on projects that involve significant development effort, you should test the critical behaviors of your functions and classes.
+
+You’ll be more confident that new work on your project won’t break the parts that work, and this will give you the freedom to make improvements to your code.
+
+If you accidentally break existing functionality, you’ll know right away, so you can still fix the problem easily. Responding to a failed test that you ran is much easier than responding to a bug report from an unhappy user.
+
+Other programmers will respect your projects more if you include some initial tests.
+
+They’ll feel more comfortable experimenting with your code and be more willing to work with you on projects.
+
+If you want to contribute to a project that other programmers are working on, you’ll be expected to show that your code passes existing tests and you’ll usually be expected to write tests for any new behavior you introduce to the project.
+
+Play around with tests to become familiar with the process of testing your code. Write tests for the most critical behaviors of your functions and classes, but don’t aim for full coverage in early projects unless you have a specific reason to do so.
