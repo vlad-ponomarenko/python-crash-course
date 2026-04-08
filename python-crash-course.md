@@ -6496,3 +6496,39 @@ They’ll feel more comfortable experimenting with your code and be more willing
 If you want to contribute to a project that other programmers are working on, you’ll be expected to show that your code passes existing tests and you’ll usually be expected to write tests for any new behavior you introduce to the project.
 
 Play around with tests to become familiar with the process of testing your code. Write tests for the most critical behaviors of your functions and classes, but don’t aim for full coverage in early projects unless you have a specific reason to do so.
+
+```python
+employee_with_fixture/employee.py
+class Employee:
+    """A class to represent an employee."""
+
+    def __init__(self, f_name, l_name, salary):
+        """Initialize the employee."""
+        self.first = f_name.title()
+        self.last = l_name.title()
+        self.salary = salary
+
+    def give_raise(self, amount=5000):
+        """Give the employee a raise."""
+        self.salary += amount
+employee_with_fixture/test_employee.py
+import pytest
+
+from employee import Employee
+
+@pytest.fixture
+def employee():
+    """An Employee object that will be available to all test functions."""
+    employee = Employee('eric', 'matthes', 65_000)
+    return employee
+
+def test_give_default_raise(employee):
+    """Test that a default raise works correctly."""
+    employee.give_raise()
+    assert employee.salary == 70_000
+
+def test_give_custom_raise(employee):
+    """Test that a custom raise works correctly."""
+    employee.give_raise(10000)
+    assert employee.salary == 75_000
+```
