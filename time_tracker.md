@@ -278,3 +278,123 @@ A text-first app where users paste, organize, search, summarize, and extract tas
 That second one is the best stepping stone toward AI transcription.
 
 If you want, I can turn these two into a **feature roadmap with DB schema, API routes, and MVP order**.
+
+# REVISIT
+
+It’s a **good sprint plan**, but I’d adjust 4 things.
+
+**What’s strong**
+
+- The **Time Tracker** is a smart choice. It forces you to model relationships, state, API routes, and a simple UI.
+- Splitting the week into **code + technical reading + lighter evening reading** is sensible.
+- The focus on **pytest** and **README/docs** is exactly right for a first job.
+
+**What I’d change**
+
+1. **Don’t force OAuth2 into this week unless your job needs auth immediately.**
+   FastAPI has solid auth docs, but auth can eat a lot of time fast. For a 7-day pre-job sprint, a cleaner win is: CRUD + timer start/stop + summary + tests + simple Streamlit frontend. Add auth later unless you already know the company stack needs it. ([FastAPI][1])
+
+2. **Docker on Day 7 is optional, not mandatory.**
+   A clean `README`, working local setup, and tests are more valuable than squeezing in Docker if time is tight. If you finish early, then add Docker.
+
+3. **Use FastAPI docs first, books second, for framework-specific topics.**
+   For dependencies, DB session handling, testing patterns, and app lifecycle, the official docs are the fastest path. FastAPI’s docs cover SQL databases, testing DBs, dependency cleanup with `yield`, and lifespan handling directly. ([FastAPI][2])
+
+4. **I would not blindly insist on AsyncSession for this sprint.**
+   Async DB access is common, but it also adds complexity. SQLAlchemy’s docs emphasize that `AsyncSession` is still a mutable, stateful transaction object and should not be shared across concurrent tasks, so you need to understand the rules well. FastAPI’s own docs still support multiple approaches and do not force one stack. For a one-week prep project, **sync SQLAlchemy/SQLModel is fine** if it helps you ship faster; choose async only if your actual job codebase uses it. ([SQLAlchemy][3])
+
+## My tighter version of the sprint
+
+### Days 1–2
+
+Build:
+
+- models: `User`, `Task`, `TimeEntry`
+- schemas
+- SQLite first
+
+Read:
+
+- your reference book for `datetime`, classes
+- a bit of _Pragmatic Programmer_
+
+### Days 3–4
+
+Build:
+
+- `POST /tasks`
+- `POST /timer/start`
+- `POST /timer/stop`
+- `GET /summary/today`
+
+Read:
+
+- FastAPI docs on path/query/body/dependencies
+- _Clean Code_ on naming/functions
+
+### Day 5
+
+Build:
+
+- 3–5 pytest tests
+- invalid stop
+- cannot start twice
+- summary returns expected total
+
+Read:
+
+- pytest basics
+- FastAPI testing docs
+
+### Day 6
+
+Build:
+
+- Streamlit page:
+  - list tasks
+  - start timer
+  - stop timer
+  - show today’s total
+
+Read:
+
+- Streamlit docs or the practical FastAPI/Streamlit book section
+
+### Day 7
+
+Polish:
+
+- README
+- screenshots
+- sample `.env`
+- project structure cleanup
+- optional Docker only if everything else works
+
+## Book order I’d keep
+
+1. _Clean Code_
+2. _Python Testing with pytest_
+3. _The Pragmatic Programmer_ in parallel
+4. Your FastAPI/Streamlit practical book as a build guide
+5. DDIA later, not now
+
+## Bottom line
+
+Use that plan, but:
+
+- **drop OAuth2 unless necessary**
+- **don’t force async DB just because it sounds modern**
+- **prioritize a finished, tested, documented app over extra tech**
+
+And yes, a simple Git workflow matters a lot:
+
+- `main`
+- small commits
+- push daily
+- one clean README at the end
+
+A very simple branch/commit plan for this 7-day sprint would help.
+
+[1]: https://fastapi.tiangolo.com/?utm_source=chatgpt.com "FastAPI"
+[2]: https://fastapi.tiangolo.com/tutorial/sql-databases/?utm_source=chatgpt.com "SQL (Relational) Databases"
+[3]: https://docs.sqlalchemy.org/en/latest/orm/extensions/asyncio.html?utm_source=chatgpt.com "Asynchronous I/O (asyncio) — SQLAlchemy 2.1 ..."
