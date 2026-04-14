@@ -3257,3 +3257,1738 @@ That’s a big shift — and you’re handling it well.
 ---
 
 If you want next: I can turn this into **actual Git branches + commit plan**, so every step becomes a clean, professional history.
+
+# 14 04 26 9:58 - HANDLING EDGE CASES EXAMPLE
+
+Here’s the practical next-step version, with small examples for each one.
+
+**1. Prevent starting a timer twice**
+
+Why:
+If a timer is already running, calling `start_timer()` again should not silently overwrite `start_time`.
+
+Example:
+
+```python
+def start_timer(self):
+    if self.start_time is not None and self.end_time is None:
+        raise ValueError("Timer is already running")
+
+    self.start_time = dt.now()
+    self.end_time = None
+```
+
+This means:
+
+- `start_time != None`
+- `end_time == None`
+- therefore an active timer already exists
+
+---
+
+**2. Decide how to handle calling `stop_timer()` twice**
+
+Best simple rule:
+After stopping, reset the timer state or explicitly reject a second stop.
+
+Option A: reject second stop
+
+```python
+def stop_timer(self):
+    if self.start_time is None:
+        raise ValueError("Timer was never started")
+
+    if self.end_time is not None:
+        raise ValueError("Timer has already been stopped")
+
+    self.end_time = dt.now()
+    duration = self.calculate_duration(self.start_time, self.end_time)
+
+    return {
+        "start_time": self.start_time.isoformat(),
+        "end_time": self.end_time.isoformat(),
+        "duration": duration,
+    }
+```
+
+Option B: reset after stop so a new session can begin cleanly
+
+```python
+def stop_timer(self):
+    if self.start_time is None:
+        raise ValueError("Timer was never started")
+
+    if self.end_time is not None:
+        raise ValueError("Timer has already been stopped")
+
+    self.end_time = dt.now()
+    duration = self.calculate_duration(self.start_time, self.end_time)
+
+    result = {
+        "start_time": self.start_time.isoformat(),
+        "end_time": self.end_time.isoformat(),
+        "duration": duration,
+    }
+
+    self.start_time = None
+    self.end_time = None
+
+    return result
+```
+
+For your app, Option B is usually cleaner.
+
+---
+
+**3. Add tests for edge cases**
+
+Why:
+Right now the logic may look correct, but tests prove it stays correct.
+
+Example with `pytest`:
+
+```python
+from datetime import datetime as dt
+import pytest
+from backend.src.services.timer import Timer
+
+
+def test_calculate_duration_across_midnight():
+    timer = Timer()
+    start = dt(2026, 4, 14, 23, 59, 50)
+    end = dt(2026, 4, 15, 0, 0, 10)
+
+    result = timer.calculate_duration(start, end)
+
+    assert result["total_seconds"] == 20
+    assert result["hours"] == 0
+    assert result["minutes"] == 0
+    assert result["seconds"] == 20
+
+
+def test_calculate_duration_across_year_boundary():
+    timer = Timer()
+    start = dt(2025, 12, 31, 23, 59, 30)
+    end = dt(2026, 1, 1, 0, 0, 30)
+
+    result = timer.calculate_duration(start, end)
+
+    assert result["total_seconds"] == 60
+
+
+def test_calculate_duration_rejects_end_before_start():
+    timer = Timer()
+    start = dt(2026, 4, 14, 12, 0, 10)
+    end = dt(2026, 4, 14, 12, 0, 5)
+
+    with pytest.raises(ValueError, match="smaller"):
+        timer.calculate_duration(start, end)
+
+
+def test_stop_timer_without_start_raises():
+    timer = Timer()
+
+    with pytest.raises(ValueError, match="never started"):
+        timer.stop_timer()
+```
+
+---
+
+**4. Handle timezone properly**
+
+Why:
+`dt.now()` is naive. It does not include timezone info, so DST and cross-zone behavior are not truly safe.
+
+Basic improvement:
+
+```python
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+BERLIN = ZoneInfo("Europe/Berlin")
+
+now = datetime.now(BERLIN)
+```
+
+Then in your class:
+
+```python
+from datetime import datetime as dt
+from zoneinfo import ZoneInfo
+
+TIMEZONE = ZoneInfo("Europe/Berlin")
+
+
+class Timer:
+    def __init__(self):
+        self.timer_created = dt.now(TIMEZONE)
+        self.start_time = None
+        self.end_time = None
+
+    def start_timer(self):
+        if self.start_time is not None and self.end_time is None:
+            raise ValueError("Timer is already running")
+
+        self.start_time = dt.now(TIMEZONE)
+        self.end_time = None
+
+    def stop_timer(self):
+        if self.start_time is None:
+            raise ValueError("Timer was never started")
+
+        if self.end_time is not None:
+            raise ValueError("Timer has already been stopped")
+
+        self.end_time = dt.now(TIMEZONE)
+        duration = self.calculate_duration(self.start_time, self.end_time)
+
+        return {
+            "start_time": self.start_time.isoformat(),
+            "end_time": self.end_time.isoformat(),
+            "duration": duration,
+        }
+```
+
+Now `.isoformat()` will include timezone offset too.
+
+---
+
+**5. Clean up the timer state model**
+
+Your current state is a bit implicit. A small cleanup makes behavior easier to reason about.
+
+Example helper:
+
+```python
+def is_running(self) -> bool:
+    return self.start_time is not None and self.end_time is None
+```
+
+Then:
+
+```python
+def start_timer(self):
+    if self.is_running():
+        raise ValueError("Timer is already running")
+
+    self.start_time = dt.now(TIMEZONE)
+    self.end_time = None
+```
+
+This makes later API logic easier too.
+
+---
+
+**6. Improve API error handling**
+
+Right now `ValueError` may bubble up as a server error. In FastAPI, convert it into proper HTTP responses.
+
+Example in [app.py](/home/vlad/repos/portfolio/time-tracker/backend/src/app.py):
+
+```python
+from fastapi import FastAPI, HTTPException
+
+@app.post("/start_timer")
+async def start_timer():
+    try:
+        timer.start_timer()
+        return {"status": "started", "start_time": timer.start_time.isoformat()}
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.post("/stop_timer")
+async def stop_timer():
+    try:
+        time_data = timer.stop_timer()
+        write_time_entry(time_data)
+        return time_data
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+```
+
+This is much cleaner than returning a formatted string.
+
+---
+
+**Best implementation order**
+
+1. Add double-start protection
+2. Add double-stop behavior
+3. Add pytest tests
+4. Switch to timezone-aware datetimes
+5. Clean API responses
+
+If you want, I can implement these changes in your repo next.
+
+## Advice
+
+Short answer: **don’t skip — but don’t do everything now either**.
+
+You’re at a point where over-engineering is the real danger.
+
+---
+
+# 🧠 What you should do RIGHT NOW
+
+## ✅ Do these 3 things
+
+### 1. Double-start protection ✔️
+
+```python
+if self.start_time is not None and self.end_time is None:
+    raise ValueError("Timer is already running")
+```
+
+👉 This is core correctness, not a “nice-to-have”
+
+---
+
+### 2. Double-stop behavior ✔️ (choose one)
+
+👉 Use **Option B (reset state)** — best for your app
+
+```python
+self.start_time = None
+self.end_time = None
+```
+
+👉 This keeps your timer reusable and simple
+
+---
+
+### 3. Pytest tests ✔️ (VERY IMPORTANT)
+
+👉 This is actually your **next real step**
+
+Test:
+
+- normal case
+- midnight rollover
+- invalid (end < start)
+- stop without start
+
+---
+
+# ⏸️ What to SKIP FOR NOW
+
+## ❌ Timezone handling → skip (for now)
+
+This:
+
+```python
+ZoneInfo("Europe/Berlin")
+```
+
+👉 is **correct**, but:
+
+- adds complexity
+- not needed for your current scope
+- will distract you
+
+👉 Add it later when:
+
+- you have users
+- or multi-region logic
+
+---
+
+## ❌ API error handling → skip for now
+
+You already understand the idea:
+
+```python
+HTTPException
+```
+
+👉 Implement later when your API grows
+
+---
+
+## ❌ Over-structuring state model → keep minimal
+
+This is good:
+
+```python
+def is_running(self):
+```
+
+👉 but optional for now
+
+---
+
+# ⚖️ What you’re balancing
+
+Right now you’re between:
+
+```text
+Beginner → Over-engineer trap
+```
+
+👉 The goal is:
+
+```text
+Correct + testable + simple
+```
+
+NOT:
+
+```text
+Perfect + enterprise-grade
+```
+
+---
+
+# 🔥 Recommended next steps (clean)
+
+```text
+1. Add double-start protection
+2. Add double-stop behavior (reset)
+3. Write pytest tests
+```
+
+👉 STOP there before adding anything else
+
+---
+
+# 🧠 Why this is the right move
+
+Because now you have:
+
+- correct logic ✔️
+- safe state transitions ✔️
+- tested behavior ✔️
+
+👉 That’s a **stable foundation**
+
+---
+
+# 🚀 Only AFTER that
+
+Move to:
+
+```text
+→ Pydantic
+→ manual entry
+→ summaries
+```
+
+---
+
+# 🏁 Final answer
+
+✔️ Do:
+
+- double-start protection
+- double-stop handling
+- pytest
+
+❌ Skip (for now):
+
+- timezone
+- API error handling
+- extra abstractions
+
+---
+
+# 💡 One sentence rule
+
+👉 **If it affects correctness → do it now**
+👉 **If it adds complexity → delay it**
+
+---
+
+You’re making very good decisions right now — the only thing to watch is **not adding too much at once**.
+
+If you want, I can help you write **exactly 3 minimal pytest tests** that give you maximum confidence without overdoing it.
+
+## ADVICE REGARDING BRANCHES 14 04 26 10:14
+
+Yes, that’s fine.
+
+`feature/backend/timer-api` is still a reasonable branch name for:
+
+- pytest around timer behavior
+- manual entry endpoint
+- summaries
+- Pydantic schemas
+- light backend structure refactor
+
+All of that is still part of building out the backend timer API.
+
+I’d only split to a new branch if one of these happens:
+
+- you start a separate SQLite/SQLAlchemy persistence track
+- you begin a Streamlit frontend
+- you start users/auth, which is a bigger feature area
+- the branch gets very large and you want smaller PRs/commit groups
+
+So for your next few backend steps, staying on `feature/backend/timer-api` makes sense.
+
+A practical rule:
+
+- stay on this branch for timer logic + API shaping
+- create a new branch later for persistence, like `feature/backend/sqlite-persistence`
+- create another later for auth or frontend
+
+So short answer: yes, remain on it for now.
+
+## ADVICE REGARDING TEST FOLDER 14 04 26 10:18
+
+The proper place is usually a top-level `tests/` folder inside your backend package area or project root.
+
+For your repo, I’d recommend:
+
+```text
+backend/
+├── src/
+└── tests/
+    └── test_timer.py
+```
+
+Why this is the cleanest:
+
+- keeps production code separate from test code
+- scales well as you add API, DB, and schema tests
+- matches common `pytest` project layout
+
+A nice future structure would be:
+
+```text
+backend/tests/
+├── test_timer.py
+├── test_api.py
+├── test_summaries.py
+└── test_db.py
+```
+
+If you want more structure later:
+
+```text
+backend/tests/
+├── services/
+│   └── test_timer.py
+├── api/
+│   └── test_timer_routes.py
+└── db/
+    └── test_json_writer.py
+```
+
+For now, simplest good choice:
+
+- create `backend/tests/`
+- put `test_timer.py` there
+
+That’s the proper and standard place for your `pytest` tests.
+
+# BASIC TESTS 14 04 26 11:17
+
+Start by not testing “real current time” first.
+
+That’s the key thing making this feel harder than it is.
+
+For your timer logic, the easiest path is:
+
+1. test pure functions or deterministic methods first
+2. avoid `dt.now()` in the first tests
+3. only later test `start_timer()` / `stop_timer()` behavior by controlling time
+
+For your project, the easiest first target is `calculate_duration()`, because you can pass exact datetime values yourself.
+
+Example:
+
+```python
+from datetime import datetime as dt
+from backend.src.services.timer import Timer
+
+
+def test_calculate_duration_returns_expected_values():
+    timer = Timer()
+
+    start = dt(2026, 4, 14, 10, 0, 0)
+    end = dt(2026, 4, 14, 11, 30, 15)
+
+    result = timer.calculate_duration(start, end)
+
+    assert result["total_seconds"] == 5415
+    assert result["hours"] == 1
+    assert result["minutes"] == 30
+    assert result["seconds"] == 15
+```
+
+That gives you confidence without dealing with live clock values.
+
+For `start_timer()` / `stop_timer()`, don’t try to assert the exact current timestamp at first. Instead assert behavior:
+
+- `start_time` is set
+- `end_time` is set
+- returned data contains expected keys
+- invalid states raise `ValueError`
+
+Example:
+
+```python
+import pytest
+from backend.src.services.timer import Timer
+
+
+def test_stop_timer_without_start_raises():
+    timer = Timer()
+
+    with pytest.raises(ValueError):
+        timer.stop_timer()
+```
+
+Example:
+
+```python
+def test_start_timer_sets_start_time():
+    timer = Timer()
+
+    timer.start_timer()
+
+    assert timer.start_time is not None
+    assert timer.end_time is None
+```
+
+So the trick is:
+
+- don’t begin with exact datetime equality
+- begin with state and structure assertions
+
+For Pydantic specifically, test schemas separately from timer behavior.
+
+Start with:
+
+- schema accepts valid data
+- schema rejects invalid data
+
+Example if you later have:
+
+```python
+from pydantic import BaseModel
+
+class DurationSchema(BaseModel):
+    total_seconds: int
+    hours: int
+    minutes: int
+    seconds: int
+```
+
+Test:
+
+```python
+from backend.src.schemas.time_entry import DurationSchema
+
+
+def test_duration_schema_accepts_valid_data():
+    data = {
+        "total_seconds": 5415,
+        "hours": 1,
+        "minutes": 30,
+        "seconds": 15,
+    }
+
+    schema = DurationSchema(**data)
+
+    assert schema.total_seconds == 5415
+    assert schema.hours == 1
+```
+
+Then invalid case:
+
+```python
+import pytest
+from pydantic import ValidationError
+from backend.src.schemas.time_entry import DurationSchema
+
+
+def test_duration_schema_rejects_invalid_data():
+    with pytest.raises(ValidationError):
+        DurationSchema(
+            total_seconds="bad",
+            hours=1,
+            minutes=30,
+            seconds=15,
+        )
+```
+
+So your starting order should be:
+
+1. `test_timer.py`
+
+- test `calculate_duration()`
+- test invalid stop-before-start
+- test basic start state
+
+2. `test_schemas.py` or schema tests later
+
+- valid payload
+- invalid payload
+
+3. only after that, API tests
+
+The big mindset shift:
+You do not test everything at once.
+You separate:
+
+- time math
+- timer state rules
+- schema validation
+- API behavior
+
+If you want, I can give you the first 3 easiest pytest tests for your current `Timer` class, written specifically for your repo structure.
+
+# TIMEENTRY MODEL
+
+No, you do not need to add a `TimeEntry` model first.
+
+The best order for you is probably:
+
+1. test current timer logic
+2. add Pydantic schemas when you start shaping API input/output
+3. add a `TimeEntry` model when you actually need a real domain object reused across features
+
+Why:
+
+- `pytest` for `calculate_duration()` and timer state can be written right now
+- Pydantic is about validating API data, so it can come before a domain model
+- a `TimeEntry` model becomes useful when manual entry, summaries, and persistence start sharing the same internal structure
+
+So:
+
+- for testing the current `Timer` service: no model needed
+- for adding request/response validation: Pydantic can also be added without a model first
+- for cleaner architecture later: yes, then add `TimeEntry`
+
+A good practical path is:
+
+- write tests for `Timer` now
+- add `schemas/` when you build manual entry
+- add `models/time_entry.py` once manual entry + summaries start needing one internal object
+
+So short answer: no, don’t block on adding a model first. You can move forward now.
+
+# USING PYDANTIC 14 04 26 15:08
+
+Pydantic makes sense when you want your API to stop returning “some strange answer” and start returning a defined shape.
+
+That’s really the reason to add it now.
+
+Right now your endpoints are kind of ad hoc:
+
+- response shape is not strongly defined
+- error handling is inconsistent
+- future endpoints like manual entry and reports will need structured input
+- users/auth later will definitely need request validation
+
+What Pydantic is supposed to check:
+
+- request body has the required fields
+- field types are correct
+- datetimes are valid
+- missing or malformed input gets rejected automatically
+- responses follow a predictable schema
+
+Without Pydantic, your manual entry endpoint will get messy fast. For example, if a user sends:
+
+```json
+{
+  "start_time": "wrong",
+  "end_time": 123
+}
+```
+
+you would have to validate that manually.
+
+With Pydantic, you define a schema once:
+
+```python
+from datetime import datetime
+from pydantic import BaseModel
+
+
+class ManualTimeEntryRequest(BaseModel):
+    start_time: datetime
+    end_time: datetime
+```
+
+Then FastAPI automatically:
+
+- parses the body
+- validates types
+- returns `422` if invalid
+
+Example endpoint:
+
+```python
+@app.post("/manual_entry")
+async def manual_entry(entry: ManualTimeEntryRequest):
+    return {
+        "start_time": entry.start_time.isoformat(),
+        "end_time": entry.end_time.isoformat(),
+    }
+```
+
+So the real reason to add Pydantic now is not your current timer start/stop endpoints.
+It’s because your next features need proper input contracts:
+
+- manual entry
+- summaries with query params or filters
+- users/auth payloads
+
+For your current app, the most useful first schemas would be:
+
+- `ManualTimeEntryRequest`
+
+```python
+class ManualTimeEntryRequest(BaseModel):
+    start_time: datetime
+    end_time: datetime
+```
+
+- `DurationResponse`
+
+```python
+class DurationResponse(BaseModel):
+    total_seconds: int
+    hours: int
+    minutes: int
+    seconds: int
+```
+
+- `TimeEntryResponse`
+
+```python
+class TimeEntryResponse(BaseModel):
+    start_time: str
+    end_time: str
+    duration: DurationResponse
+```
+
+Then your API stops being random strings and becomes consistent.
+
+So the short answer is:
+
+- you add Pydantic now to define clean request/response shapes
+- it checks type correctness and missing/invalid data
+- it becomes especially important for manual entry
+- for your current start/stop endpoints, it’s helpful but not urgent
+- for the next feature set, it becomes very useful
+
+If you feel confused, the simplest rule is:
+
+- no request body: Pydantic is optional
+- request body from user: Pydantic is strongly recommended
+
+For your roadmap, I’d say:
+
+1. manual entry endpoint
+2. add Pydantic as part of that work
+3. then summaries
+
+So you do not need Pydantic “before everything.”
+You need it when endpoints start accepting real structured input.
+
+# ADDING TASK TO TIME-TRACKING
+
+You should add that at the same time you introduce the manual entry/domain shape, not later with auth or reporting.
+
+Best moment:
+
+- now, while defining your Pydantic schemas for `TimeEntry`
+- before building summaries, because summaries by task depend on that field existing consistently
+
+Why now:
+
+- `task` is part of the meaning of a time entry, not a later UI concern
+- if you add it later, old entries and endpoints may have a different shape
+- reports like “hours spent per task” become much easier if the field is built into the model early
+
+A good first version is to make it optional at first:
+
+```python
+from datetime import datetime
+from pydantic import BaseModel
+
+
+class DurationSchema(BaseModel):
+    total_seconds: int
+    hours: int
+    minutes: int
+    seconds: int
+
+
+class ManualTimeEntryRequest(BaseModel):
+    start_time: datetime
+    end_time: datetime
+    task: str | None = None
+
+
+class TimeEntryResponse(BaseModel):
+    start_time: datetime
+    end_time: datetime
+    task: str | None = None
+    duration: DurationSchema
+```
+
+That gives you flexibility:
+
+- users can create entries without a task for now
+- later you can filter/group by `task`
+- when the app matures, you can make it required if you want
+
+If you already know task tracking is a core feature, you can make it required instead:
+
+```python
+class ManualTimeEntryRequest(BaseModel):
+    start_time: datetime
+    end_time: datetime
+    task: str
+```
+
+My recommendation for your stage:
+
+- add `task` now
+- make it optional first
+- use it in both request and response schemas
+- later include it in JSON/DB persistence and summaries
+
+So the short answer is: add it now, together with `TimeEntry` schema design, before manual entry and before reports.
+
+# INIT PYDANTIC EXPLANATION
+
+Yes — **this version is better** ✅
+You just made your code **cleaner AND type-safe at the same time**.
+
+Now let’s explain everything again properly, especially `__init__`, because that’s the part that usually confuses people.
+
+---
+
+# 🧠 Why your new version is better
+
+You changed from:
+
+```python
+start_time=timer.start_time  # datetime | None ❌
+```
+
+to:
+
+```python
+start_time = timer.start_timer(...)  # datetime ✅
+```
+
+👉 Now:
+
+```text
+start_time is GUARANTEED datetime
+```
+
+So:
+
+- no `None` possibility ✔️
+- no type error ✔️
+- no need for `assert` ✔️
+
+👉 This is the **cleanest solution**
+
+---
+
+# 🔍 Now the important part: `__init__`
+
+You saw:
+
+```text
+Argument ... in function "__init__"
+```
+
+and asked:
+
+> “what is **init**? why is it here?”
+
+---
+
+## 🧠 What `__init__` actually is
+
+In Python, every class has a constructor:
+
+```python
+class Example:
+    def __init__(self, x):
+        self.x = x
+```
+
+👉 When you do:
+
+```python
+obj = Example(5)
+```
+
+Python actually does:
+
+```python
+Example.__init__(obj, 5)
+```
+
+---
+
+# ⚡ Apply this to your case
+
+You wrote:
+
+```python
+TimerStartResponse(
+    start_time=start_time,
+    task=request.task,
+    status="Timer started"
+)
+```
+
+👉 This is NOT just “creating an object”
+
+👉 It is actually calling:
+
+```python
+TimerStartResponse.__init__(
+    start_time=start_time,
+    task=request.task,
+    status="Timer started"
+)
+```
+
+---
+
+# 🔥 Why the error mentions `__init__`
+
+Because the problem happens **when constructing the object**
+
+👉 The constructor (`__init__`) expects:
+
+```python
+start_time: datetime
+```
+
+But before, you gave:
+
+```text
+datetime | None
+```
+
+So Python/Pylance says:
+
+> “You passed the wrong type into the constructor (`__init__`)”
+
+---
+
+# 🧠 Important insight
+
+👉 This is NOT about your function
+👉 It is about **creating the response object**
+
+---
+
+# ⚠️ Why Pydantic is stricter
+
+Your model:
+
+```python
+class TimerStartResponse(BaseModel):
+    start_time: datetime
+```
+
+means:
+
+```text
+start_time MUST be datetime
+```
+
+So when you call:
+
+```python
+TimerStartResponse(...)
+```
+
+Pydantic’s `__init__` enforces that rule.
+
+---
+
+# 🔁 Old vs new flow
+
+## ❌ Old version
+
+```text
+timer.start_time → datetime | None
+↓
+passed into __init__
+↓
+ERROR
+```
+
+---
+
+## ✅ New version
+
+```text
+timer.start_timer() → datetime
+↓
+passed into __init__
+↓
+OK
+```
+
+---
+
+# 💡 Why your new design is cleaner (important)
+
+You made your method:
+
+```python
+def start_timer(...):
+    ...
+    return self.start_time
+```
+
+👉 That means:
+
+```text
+function output = guaranteed value
+```
+
+Instead of:
+
+```text
+external state = maybe value
+```
+
+---
+
+# 🧠 This is a deeper improvement
+
+You moved from:
+
+```text
+"read internal state and hope it's valid"
+```
+
+to:
+
+```text
+"use function return value (guaranteed valid)"
+```
+
+👉 That’s a **very good backend pattern**
+
+---
+
+# 🏁 Final explanation (simple)
+
+### What `__init__` is:
+
+- constructor of a class
+- runs when you create an object
+- validates inputs (especially in Pydantic)
+
+---
+
+### Why the error happened:
+
+- you passed `datetime | None`
+- but constructor requires `datetime`
+
+---
+
+### Why your fix works:
+
+- `start_timer()` now returns `datetime`
+- so constructor gets correct type
+
+---
+
+# 💡 One sentence to remember
+
+👉 _“Creating an object = calling its `__init__`, so all arguments must match its types.”_
+
+---
+
+You just improved:
+
+- type safety ✔️
+- API correctness ✔️
+- code clarity ✔️
+
+👉 This is exactly how real backend code evolves.
+
+# STORING CURL REQUESTS
+
+Your current approach is totally fine for personal local scratch work.
+
+A local `curl.txt` that you don’t commit is a normal, practical developer habit.
+
+The more “proper” approaches depend on what the file is for:
+
+If it’s just for your own quick manual testing:
+
+- keep using a local scratch file like `curl.txt`
+- add it to `.gitignore`
+- no problem at all
+
+If it’s for repeatable team/dev testing:
+
+- create a committed `docs/api-examples.md`
+- or `backend/docs/manual-testing.md`
+- keep clean example requests there
+
+If it’s for executable API testing:
+
+- move toward `pytest` API tests
+- use FastAPI `TestClient`
+- then the requests become real tests instead of notes
+
+If you want a nicer manual-testing format than raw curl:
+
+- use a `.http` file for VS Code REST Client / IntelliJ HTTP client
+- example: `backend/http/manual_entry.http`
+- these are often nicer than `curl.txt`
+
+Example `.http` file:
+
+```http
+POST http://127.0.0.1:8000/start_timer
+Content-Type: application/json
+
+{}
+```
+
+```http
+POST http://127.0.0.1:8000/start_timer
+Content-Type: application/json
+
+{
+  "task": "Write report"
+}
+```
+
+This is often the cleanest “manual testing but still organized” option.
+
+So the practical answer is:
+
+- `curl.txt` uncommitted: perfectly okay for local scratch work
+- committed project examples: use `docs/*.md` or `.http` files
+- real verification: use `pytest` API tests
+
+My recommendation for you right now:
+
+- keep `curl.txt` if it helps you move fast
+- add it to `.gitignore`
+- later replace important cases with `pytest`
+- if you want cleaner manual requests, switch to `backend/http/requests.http`
+
+That’s the most realistic workflow.
+
+# DEFINE API RULES FOR HTTPEXCEPTIONS
+
+Here’s a simple checklist you can use for this project.
+
+**API Rules**
+
+1. Every successful endpoint returns structured JSON
+
+- no string-built status messages
+- no sets
+- use dicts or Pydantic response models
+
+2. Every endpoint should have a clear success status code
+
+- `200 OK` for successful reads/start/stop/summary fetches
+- `201 Created` for creating a manual time entry
+
+3. Request bodies should use Pydantic models
+
+- if the endpoint accepts JSON, define a schema
+- let FastAPI validate types and required fields
+
+4. Response bodies should use Pydantic models when practical
+
+- especially for timer start/stop
+- especially for manual entry and summaries
+
+5. Business logic errors become HTTP errors
+
+- service layer raises `ValueError`
+- route layer catches it and returns `HTTPException`
+
+6. Validation errors are left to FastAPI/Pydantic
+
+- wrong types
+- missing required fields
+- invalid JSON
+- these naturally become `422`
+
+7. Use `400 Bad Request` for invalid timer/business state
+   Examples:
+
+- stopping before starting
+- starting while already running
+- manual entry with `end_time < start_time`
+
+8. Keep response shapes consistent
+
+- same field names everywhere
+- for example always use:
+  - `start_time`
+  - `end_time`
+  - `task`
+  - `duration`
+
+9. Do not mix human message strings with actual data unless needed
+
+- prefer:
+
+```json
+{
+  "start_time": "...",
+  "task": "..."
+}
+```
+
+- instead of:
+
+```json
+{
+  "status": "Timer started at ..."
+}
+```
+
+10. Service layer should not know about HTTP
+
+- `timer.py` raises Python errors
+- `app.py` handles HTTP response details
+
+**Very simple status code rules for your app**
+
+- `200 OK`
+  - `/start_timer`
+  - `/stop_timer`
+  - summary endpoints
+
+- `201 Created`
+  - `/manual_entry`
+
+- `400 Bad Request`
+  - invalid timer state
+  - invalid business rule like `end_time < start_time`
+
+- `422 Unprocessable Entity`
+  - invalid request body
+  - missing required JSON fields
+  - wrong field types
+
+**Simple pattern to follow in every route**
+
+- validate input with Pydantic
+- call service
+- catch `ValueError`
+- return structured response
+
+That is enough to keep the API clean without overengineering.
+
+If you want, after you implement it manually, I can review your `app.py` and tell you whether it follows this checklist well.
+
+## VALUE ERROR
+
+Great question — this is a **core backend concept**. Once you get this, error handling becomes much clearer.
+
+---
+
+# 🧠 1. Why is it called `ValueError` everywhere?
+
+`ValueError` is a **built-in Python exception**.
+
+👉 It means:
+
+> “The value you passed is wrong or invalid.”
+
+---
+
+## 🔍 Example
+
+```python
+int("abc")
+```
+
+👉 Python raises:
+
+```text
+ValueError: invalid literal for int()
+```
+
+Because:
+
+- type is fine (string) ✔️
+- but value is invalid ❌
+
+---
+
+## ⚡ In your case
+
+```python
+if self.start_time is None:
+    raise ValueError("Timer was never started")
+```
+
+👉 You are saying:
+
+> “The state/value of this object is invalid for this operation.”
+
+---
+
+## 🧠 When to use `ValueError`
+
+Use it when:
+
+- input is wrong
+- state is wrong
+- operation cannot be performed
+
+👉 Perfect for your Timer logic
+
+---
+
+# 🔥 2. What does `raise` mean?
+
+```python
+raise ValueError("...")
+```
+
+👉 Means:
+
+> “Stop execution and throw an error”
+
+Equivalent to:
+
+```text
+Something is wrong → stop everything here
+```
+
+---
+
+# 🔁 Flow
+
+```text
+Timer.stop_timer()
+↓
+ValueError raised
+↓
+function stops immediately
+↓
+error bubbles up
+```
+
+---
+
+# 🧠 3. What is `HTTPException`?
+
+FastAPI uses `HTTPException` to represent **web/API errors**.
+
+---
+
+## ⚡ Why not use `ValueError` directly in API?
+
+Because:
+
+```text
+ValueError → Python-level error
+HTTPException → HTTP/API-level error
+```
+
+---
+
+# 🔥 What `raise HTTPException(...)` means
+
+```python
+from fastapi import HTTPException
+
+raise HTTPException(status_code=400, detail="Timer was never started")
+```
+
+👉 Means:
+
+> “Return an HTTP response with error status and message”
+
+---
+
+## 📡 What the client sees
+
+```json
+{
+  "detail": "Timer was never started"
+}
+```
+
+Status code:
+
+```text
+400 Bad Request
+```
+
+---
+
+# 🔁 Full flow (important)
+
+```text
+User calls API
+↓
+Timer logic runs
+↓
+ValueError raised
+↓
+API catches it
+↓
+converted to HTTPException
+↓
+client gets proper HTTP response
+```
+
+---
+
+# 🧠 Why both exist
+
+## Inside your logic (Timer)
+
+```python
+raise ValueError(...)
+```
+
+👉 clean, simple, reusable
+
+---
+
+## Inside your API
+
+```python
+except ValueError:
+    raise HTTPException(...)
+```
+
+👉 converts internal error → API response
+
+---
+
+# 🔥 Real-world analogy
+
+- `ValueError` = engine error
+- `HTTPException` = dashboard message
+
+---
+
+# ⚠️ What happens if you don’t use HTTPException
+
+If `ValueError` reaches FastAPI:
+
+👉 user gets:
+
+```text
+500 Internal Server Error ❌
+```
+
+👉 That’s wrong, because:
+
+- it’s not a server crash
+- it’s user mistake
+
+---
+
+# 🏁 Final summary
+
+## `ValueError`
+
+- Python error
+- used in your logic
+- means “invalid value/state”
+
+---
+
+## `raise`
+
+- stops execution
+- throws error
+
+---
+
+## `HTTPException`
+
+- FastAPI error
+- returns proper HTTP response
+
+---
+
+# 💡 One sentence to remember
+
+👉 _“ValueError is for my code, HTTPException is for my users.”_
+
+---
+
+You’re now dealing with **real backend error handling**, which is a big step forward.
+
+## PATHETIC MISTAKE! !!
+
+```python
+
+@app.post("/manual_entry", response_model=TimeEntryResponse)
+async def manual_entry(request: ManualTimeEntryRequest):
+    try:
+        timer.start_time = request.start_time
+        timer.end_time = request.end_time
+        timer.current_task = request.task
+        time_data = timer.stop_timer()
+        write_time_entry(time_data)
+        print(f"Manual Entry Added: {time_data}")
+        return time_data
+
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+```
+
+Your current manual entry implementation is close in spirit, but it has one hard bug and one design risk.
+
+**Findings**
+
+- [backend/src/app.py](/home/vlad/repos/portfolio/time-tracker/backend/src/app.py:40): `manual_entry()` sets `timer.end_time = request.end_time` and then calls `timer.stop_timer()`. That conflicts with [backend/src/services/timer.py](/home/vlad/repos/portfolio/time-tracker/backend/src/services/timer.py:31), where `stop_timer()` immediately raises if `self.end_time is not None`. So manual entry will be treated as “already stopped”.
+- [backend/src/app.py](/home/vlad/repos/portfolio/time-tracker/backend/src/app.py:40): manual entry reuses the live `Timer` object’s runtime state. That means manual entry can interfere with an active timer session, because it mutates `start_time`, `end_time`, and `current_task` on the shared singleton timer.
+
+**Comparison**
+
+Your version:
+
+```python
+timer.start_time = request.start_time
+timer.end_time = request.end_time
+timer.current_task = request.task
+time_data = timer.stop_timer()
+```
+
+The version I suggested conceptually was:
+
+- do not reuse `stop_timer()` for manual entries
+- validate `start_time` / `end_time`
+- call `calculate_duration(request.start_time, request.end_time)`
+- build the response dict directly
+- save it
+
+That keeps manual entry separate from “stop the currently running timer”.
+
+A cleaner manual-entry shape would be:
+
+```python
+@app.post("/manual_entry", response_model=TimeEntryResponse, status_code=201)
+async def manual_entry(request: ManualTimeEntryRequest):
+    try:
+        duration = timer.calculate_duration(request.start_time, request.end_time)
+
+        time_data = {
+            "start_time": request.start_time,
+            "end_time": request.end_time,
+            "task": request.task,
+            "duration": duration,
+        }
+
+        write_time_entry(time_data)
+        return time_data
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+```
+
+Why this is better:
+
+- no collision with the currently running timer
+- no misuse of `stop_timer()`
+- manual entry stays a separate business flow
+- easier to test
+
+One small nuance: because your response model expects `datetime`, returning raw `datetime` values here is actually fine; FastAPI/Pydantic will serialize them.
+
+So short answer: your implementation is understandable, but mine is safer because manual entry should use `calculate_duration()`, not `stop_timer()`.
+
+# USE JSON ENCODER !!!
+
+Here are both valid approaches.
+
+**Option 1: convert to `.isoformat()` in `manual_entry()`**
+
+```python
+@app.post("/manual_entry", response_model=TimeEntryResponse, status_code=201)
+async def manual_entry(request: ManualTimeEntryRequest):
+    try:
+        duration = timer.calculate_duration(request.start_time, request.end_time)
+
+        time_data = {
+            "start_time": request.start_time.isoformat(),
+            "end_time": request.end_time.isoformat(),
+            "task": request.task,
+            "duration": duration,
+        }
+
+        write_time_entry(time_data)
+        return time_data
+
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+```
+
+With this version, `json_writer.py` can stay simple because the data is already JSON-safe.
+
+---
+
+**Option 2: keep datetimes in `manual_entry()` and encode in `json_writer()`**
+
+`app.py`
+
+```python
+@app.post("/manual_entry", response_model=TimeEntryResponse, status_code=201)
+async def manual_entry(request: ManualTimeEntryRequest):
+    try:
+        duration = timer.calculate_duration(request.start_time, request.end_time)
+
+        time_data = {
+            "start_time": request.start_time,
+            "end_time": request.end_time,
+            "task": request.task,
+            "duration": duration,
+        }
+
+        write_time_entry(time_data)
+        return time_data
+
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+```
+
+`json_writer.py`
+
+```python
+from pathlib import Path
+import json
+from fastapi.encoders import jsonable_encoder
+
+path = Path("time_entries.json")
+
+
+def write_time_entry(time_entry):
+    try:
+        if path.exists():
+            data = json.loads(path.read_text())
+            data.append(jsonable_encoder(time_entry))
+            path.write_text(json.dumps(data))
+        else:
+            data = [jsonable_encoder(time_entry)]
+            path.write_text(json.dumps(data))
+
+    except Exception as e:
+        print(f"Something went wrong: {e}")
+```
+
+**Recommendation**
+For your current stage, Option 2 is a bit better because it makes the writer more robust and keeps serialization logic closer to persistence. But Option 1 is also perfectly understandable and simpler to reason about at first.

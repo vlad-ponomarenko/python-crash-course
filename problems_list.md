@@ -547,3 +547,139 @@ delta.total_seconds()
 ---
 
 If you want next: I can help you turn this into a **proper FastAPI endpoint (`/start`, `/stop`) using this Timer class**, which would be a huge step for your portfolio.
+
+# WOW - HUGE MISTAKE - PYLANCE WARNING CAUSE START TIME IS BAD
+
+```
+Argument of type "datetime | None" cannot be assigned to parameter "start_time" of type "datetime" in function "__init__"
+  Type "datetime | None" is not assignable to type "datetime"
+    "None" is not assignable to "datetime"PylancereportArgumentType
+(variable) start_time: datetime | None
+
+in
+@app.post("/start_timer", response_model=TimerStartResponse)
+async def start_timer(request: StartTimerRequest):
+    timer.start_timer(task=request.task)
+    print(f"Timer started at {timer.start_time}")
+    return TimerStartResponse(
+        start_time=timer.start_time, task=request.task, status="Timer started"
+    )
+```
+
+Pylance is warning because `timer.start_time` is typed as `datetime | None`, and it cannot prove that `start_timer()` always sets it before you return it.
+
+Even though you know it’s set after this line:
+
+```python
+timer.start_timer(task=request.task)
+```
+
+the type checker only sees the attribute definition, not the runtime guarantee.
+
+The cleanest fix is to make `start_timer()` return the start time directly.
+
+Instead of relying on mutated state, do this in `timer.py`:
+
+```python
+def start_timer(self, task: str | None = None) -> dt:
+    if self.start_time is not None:
+        raise ValueError("Timer is already running")
+
+    self.start_time = dt.now()
+    self.end_time = None
+    self.current_task = task
+    print(f"Timer started at {self.start_time}")
+    return self.start_time
+```
+
+Then in `app.py`:
+
+```python
+@app.post("/start_timer", response_model=TimerStartResponse)
+async def start_timer(request: StartTimerRequest):
+    start_time = timer.start_timer(task=request.task)
+
+    return TimerStartResponse(
+        start_time=start_time,
+        task=request.task,
+        status="Timer started",
+    )
+```
+
+Why this is best:
+
+- fixes the typing issue cleanly
+- avoids depending on shared mutable state for the response
+- makes the service method more explicit
+
+A weaker workaround would be:
+
+```python
+assert timer.start_time is not None
+```
+
+before returning, like:
+
+```python
+timer.start_timer(task=request.task)
+assert timer.start_time is not None
+return TimerStartResponse(
+    start_time=timer.start_time,
+    task=request.task,
+    status="Timer started",
+)
+```
+
+This works, but it’s more of a type-checker patch than a design improvement.
+
+So the recommended fix is:
+
+- make `start_timer()` return `datetime`
+- use that returned value in the endpoint
+
+Also, you should probably define `self.current_task = None` in `__init__`, if you haven’t already.
+
+## WOW another huge mistake + explanation:
+
+Pylance is still right, because your `app.py` is still using `timer.start_time` directly.
+
+Right now you have:
+
+```python
+timer.start_timer(task=request.task)
+...
+return TimerStartResponse(
+    start_time=timer.start_time, task=request.task, status="Timer started"
+)
+```
+
+Even though `start_timer()` now returns the datetime, you’re not using that returned value. `timer.start_time` is still inferred as `dt | None`.
+
+Change it to this:
+
+```python
+@app.post("/start_timer", response_model=TimerStartResponse)
+async def start_timer(request: StartTimerRequest):
+    start_time = timer.start_timer(task=request.task)
+
+    return TimerStartResponse(
+        start_time=start_time,
+        task=request.task,
+        status="Timer started",
+    )
+```
+
+That should stop the warning.
+
+One more cleanup that will help type checkers in general: annotate the timer attributes in `Timer.__init__`:
+
+```python
+def __init__(self):
+    self.timer_created: dt = dt.now()
+    self.start_time: dt | None = None
+    self.end_time: dt | None = None
+    self.current_task: str | None = None
+    self.time_entry: dict = {}
+```
+
+So the real issue is not Pylance caching. It’s that the endpoint still references the optional attribute instead of the non-optional returned value.
