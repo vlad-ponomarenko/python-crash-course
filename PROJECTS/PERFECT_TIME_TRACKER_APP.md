@@ -703,3 +703,141 @@ That is actually a strong engineering answer, because it shows:
 - I delayed SQLAlchemy initially to avoid overengineering before the domain stabilized
 
 That is a very solid explanation in a company that uses SQLAlchemy + MongoDB, because it shows you are choosing tools based on the problem, not copying the company stack blindly.
+
+- https://stackoverflow.com/questions/11875770/how-can-i-overcome-datetime-datetime-not-json-serializable - wtf is this?
+
+# TIME_TRACKER
+
+I’m continuing work on my `time-tracker` portfolio project. Please use the following project context and continue from there without re-deriving the whole plan from scratch.
+
+Project goal:
+A time tracking app built to improve my backend/software engineering skills and later become a stronger portfolio project.
+
+Current stack and state:
+
+- Backend: FastAPI
+- Validation: Pydantic
+- Current persistence: JSON file (`time_entries.json`)
+- Current architecture folders include:
+  - `backend/src/app.py`
+  - `backend/src/services/`
+  - `backend/src/db/`
+  - `backend/src/schemas/`
+  - `backend/tests/`
+- `json_writer` was moved from `services` to `db`
+- Tests exist for timer logic with pytest
+- There is also a `backend/http/time_tracker.http` file for manual endpoint testing
+
+Implemented features:
+
+- `POST /start_timer`
+  - accepts optional `task`
+  - uses Pydantic request/response models
+- `POST /stop_timer`
+  - returns structured time entry response
+  - persists entry to JSON
+- `POST /manual_entry`
+  - accepts manual `start_time`, `end_time`, optional `task`
+  - calculates duration and writes to JSON
+- `GET /summary/daily`
+  - naive implementation
+  - query params:
+    - `date` optional, defaults to today
+    - `task` optional, filters if provided
+  - currently groups entries by `start_time.date()`
+  - does not yet handle cross-midnight overflow/splitting
+
+Current schema direction:
+
+- `DurationSchema`
+- `ManualTimeEntryRequest`
+- `TimeEntryResponse`
+- `TimerStartResponse`
+- `StartTimerRequest`
+- `SummaryDailyResponse`
+
+Current design decisions:
+
+- `task` is optional for now
+- `datetime` is used for entries
+- `date` is used for daily summary query filtering
+- service layer raises `ValueError`
+- route layer converts that to `HTTPException(400)`
+- request/response consistency is improving, but still not perfect
+- summary logic is separated into `summary_service.py`
+- file reading/writing belongs in `db/`
+
+Known limitations / missing functionality:
+
+- no overlap validation
+- no edit entry
+- no delete entry
+- no duplicate protection
+- no timezone-aware datetime handling
+- persistence layer still uses JSON, not SQLite
+- `json_writer` still has weak error handling (`print(...)`)
+- daily summary is naive and does not split entries across days
+- no weekly/monthly summaries yet
+- no auth/users yet
+- no admin panel
+- no exports yet
+
+Planned roadmap:
+Strong v1:
+
+- start timer
+- stop timer
+- manual entry
+- list entries
+- daily summary
+- edit entry
+- delete entry
+- reject overlaps
+- SQLite
+- Streamlit UI
+
+Strong v2:
+
+- weekly/monthly summaries
+- auth/users
+- one active timer per user
+- admin overview
+- filters by user/task/date
+- maybe export features
+
+Current practical priority:
+
+- I am/was short on time and wanted the best demo value
+- priority order became:
+  1. manual entry
+  2. daily summary
+  3. SQLite
+  4. Streamlit
+  5. overlap check
+  6. list entries
+- later:
+  - edit/delete
+  - weekly/monthly
+  - auth/users
+
+Important architectural reasoning:
+
+- SQLite/SQLAlchemy fit this project better than MongoDB because time tracking data is structured and relational
+- MongoDB was intentionally not used yet because the app does not currently benefit from schema flexibility
+- SQLAlchemy is planned later, once the domain/persistence model stabilizes
+- Streamlit is mainly for demo/showcase value
+- JSON was used first to keep the early version simple
+
+Communication context:
+
+- I previously told my company that I was building a Time Tracker app with FastAPI and planned to extend it with SQLAlchemy, MongoDB, Streamlit, Auth, and Docker
+- the honest framing is that FastAPI/Pydantic/current API logic are implemented now, while SQLite/SQLAlchemy, Streamlit, auth, Docker, etc. are next steps or planned work
+
+What I want from you now:
+
+- first inspect current repo files before suggesting changes
+- preserve the existing simple architecture unless there is a strong reason to refactor
+- prefer practical, incremental changes over overengineering
+- when suggesting code, optimize for a fast, good-enough solution unless I explicitly ask for ideal/advanced design
+- if we continue implementation, help me keep commit messages clean and professional
+- if we continue planning, align with the roadmap above
